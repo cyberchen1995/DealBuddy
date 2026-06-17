@@ -82,3 +82,22 @@ def test_public_docs_do_not_include_local_user_paths() -> None:
     ]
 
     assert offenders == []
+
+
+def test_public_docs_do_not_mention_local_reference_directory() -> None:
+    public_docs = [
+        "README.md",
+        "CONTRIBUTING.md",
+        "SECURITY.md",
+        "docs/THIRD_PARTY_ASSETS.md",
+        "skills/dealbuddy/SKILL.md",
+        "skills/dealbuddy/references/command-contract.md",
+    ]
+
+    offenders = [
+        path
+        for path in public_docs
+        if "参考/" in (ROOT / path).read_text(encoding="utf-8")
+    ]
+
+    assert offenders == []

@@ -14,9 +14,9 @@ DealBuddy bundles a Chrome extension and local OCR assets so the first open-sour
 | Path | Purpose | Observed source/license evidence | Redistribution note |
 | --- | --- | --- | --- |
 | `extension/dealbuddy-capture/assets/tailwind-BsAsd_7a.js` | Bundled UI/runtime JavaScript used by reference comparison runtime | File banner includes MIT license markers for bundled JavaScript runtime pieces | Keep bundled; preserve license banners |
-| `extension/dealbuddy-capture/assets/reference-compare-runtime.js` | Local reference runtime kept for extension OCR and comparison behavior | Derived from `参考/` runtime extraction; contains bundled app code | Keep only as local runtime support; do not reintroduce remote login/account behavior |
-| `extension/dealbuddy-capture/assets/api-CHoCPO3e.js` | Small helper bundle from the reference extension | Source bundle from local reference artifact | Verify upstream project license before public release tag |
-| `extension/dealbuddy-capture/assets/esearch-ocr-DkjV-qK3.js` | OCR helper JavaScript | Source bundle from local reference artifact | Verify upstream project license before public release tag |
+| `extension/dealbuddy-capture/assets/reference-compare-runtime.js` | Local OCR runtime bundle used by the extension iframe | Extracted runtime bundle; contains more code than the OCR path currently needs | Replace with a minimal OCR runtime or verify upstream license before release tag |
+| `extension/dealbuddy-capture/assets/api-CHoCPO3e.js` | Small helper bundle used by the OCR runtime | Extracted runtime helper bundle | Verify upstream project license before public release tag |
+| `extension/dealbuddy-capture/assets/esearch-ocr-DkjV-qK3.js` | OCR helper JavaScript | Extracted OCR helper bundle | Verify upstream project license before public release tag |
 | `extension/dealbuddy-capture/assets/ort-wasm-simd-threaded.jsep-CLPRrI3A.wasm` | ONNX Runtime Web wasm backend for local OCR | Filename and usage indicate ONNX Runtime Web wasm | Verify ONNX Runtime Web license and preserve notices before public release tag |
 | `extension/dealbuddy-capture/assets/ppocr_keys_v1.txt` | OCR recognition dictionary | PaddleOCR-style PP-OCR dictionary asset | Verify upstream PaddleOCR asset license before public release tag |
 
