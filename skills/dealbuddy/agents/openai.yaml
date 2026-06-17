@@ -1,0 +1,4 @@
+interface:
+  display_name: "DealBuddy 本地选品"
+  short_description: "用有界面 Chrome 调研淘宝、天猫和京东并生成可复核的选品报告"
+  default_prompt: "使用 $dealbuddy 开始或恢复一次本地浏览器购物研究，先调研参数并澄清需求，再跨平台检索、复核价格并迭代建议。"

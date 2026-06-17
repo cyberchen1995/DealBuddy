@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DealBuddy 购物搭子</title>
+    <style>
+      body {
+        width: 360px;
+        margin: 0;
+        padding: 16px;
+        color: #172033;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      h1 {
+        margin: 0 0 4px;
+        font-size: 16px;
+      }
+
+      .subtitle {
+        margin: 0 0 14px;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .card {
+        border: 1px solid #dbe3ef;
+        border-radius: 14px;
+        padding: 12px;
+        background: #fff;
+      }
+
+      .card + .card {
+        margin-top: 12px;
+      }
+
+      .section-title {
+        margin: 0 0 10px;
+        color: #0f172a;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      label {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        color: #334155;
+        font-size: 13px;
+        font-weight: 700;
+      }
+
+      input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+      }
+
+      input[type="number"],
+      input[type="url"] {
+        width: 84px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 7px 8px;
+        color: #0f172a;
+        font-size: 13px;
+      }
+
+      input[type="url"] {
+        box-sizing: border-box;
+        width: 100%;
+        margin-top: 8px;
+      }
+
+      button {
+        border: 0;
+        border-radius: 10px;
+        padding: 9px 11px;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      button.secondary {
+        border: 1px solid #cbd5e1;
+        background: #fff;
+        color: #334155;
+      }
+
+      button:disabled {
+        background: #cbd5e1;
+        color: #64748b;
+        cursor: not-allowed;
+      }
+
+      button.secondary:disabled {
+        background: #f1f5f9;
+        color: #94a3b8;
+      }
+
+      .field-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .button-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+      }
+
+      .button-row .primary {
+        grid-column: 1 / -1;
+      }
+
+      .hint,
+      .status,
+      .summary,
+      .warning-list {
+        margin: 0;
+        color: #64748b;
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .status {
+        min-height: 18px;
+      }
+
+      .status.ok {
+        color: #15803d;
+      }
+
+      .status.error {
+        color: #b91c1c;
+      }
+
+      .summary {
+        margin: 8px 0 10px;
+        color: #334155;
+      }
+
+      .warning-list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        margin-top: 8px;
+      }
+
+      .warning {
+        border: 1px solid #fed7aa;
+        border-radius: 10px;
+        padding: 7px 9px;
+        background: #fff7ed;
+        color: #9a3412;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>DealBuddy 购物搭子</h1>
+    <p class="subtitle">采集当前商品事实，发送到本地 DealBuddy 会话辅助购物决策。</p>
+
+    <section class="card" aria-labelledby="settings-title">
+      <h2 id="settings-title" class="section-title">配置</h2>
+      <form id="dealbuddy-settings-form">
+        <label>
+          <input id="auto-capture-enabled" type="checkbox">
+          启用自动采集
+        </label>
+
+        <div>
+          <label for="intake-url">Intake URL</label>
+          <input
+            id="intake-url"
+            type="url"
+            inputmode="url"
+            autocomplete="off"
+            spellcheck="false"
+          >
+          <p class="hint">默认：http://127.0.0.1:8765/api/current/offers</p>
+        </div>
+
+        <div>
+          <div class="field-row">
+            <label for="detail-load-timeout-seconds">详情图加载等待超时</label>
+            <input
+              id="detail-load-timeout-seconds"
+              type="number"
+              min="5"
+              max="60"
+              step="1"
+              inputmode="numeric"
+            >
+          </div>
+          <p class="hint">单位：秒，范围 5-60，默认 12。</p>
+        </div>
+
+        <p id="settings-status" class="status ok" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="capture-title">
+      <h2 id="capture-title" class="section-title">当前页整理</h2>
+      <p id="capture-status" class="status" role="status" aria-live="polite">
+        正在连接当前页面...
+      </p>
+      <p id="payload-summary" class="summary"></p>
+      <div class="button-row">
+        <button id="capture-current-button" class="primary" type="button">
+          整理当前商品信息
+        </button>
+        <button id="copy-json-button" class="secondary" type="button" disabled>
+          复制 JSON
+        </button>
+        <button id="recapture-button" class="secondary" type="button" disabled>
+          重新整理
+        </button>
+      </div>
+      <div id="warning-list" class="warning-list" aria-live="polite"></div>
+    </section>
+
+    <script src="settings-utils.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

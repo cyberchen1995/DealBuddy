@@ -1,0 +1,222 @@
+.dealbuddy-reading-overlay {
+  color: #172033;
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.dealbuddy-reading-overlay * {
+  box-sizing: border-box;
+}
+
+.dealbuddy-reading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483645;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dealbuddy-reading-overlay::before,
+.dealbuddy-reading-overlay::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+}
+
+.dealbuddy-reading-overlay::before {
+  border: 5px solid transparent;
+  border-radius: 22px;
+  background:
+    conic-gradient(
+        from var(--dealbuddy-reading-angle, 0deg),
+        #22d3ee,
+        #a78bfa,
+        #f472b6,
+        #fb7185,
+        #fde047,
+        #22d3ee
+      )
+      border-box;
+  opacity: 0.95;
+  animation:
+    dealbuddy-reading-edge-spin 2.2s linear infinite,
+    dealbuddy-reading-edge-pulse 1.4s ease-in-out infinite;
+  -webkit-mask:
+    linear-gradient(#000 0 0) padding-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.dealbuddy-reading-overlay::after {
+  background:
+    radial-gradient(circle at 12% 8%, rgba(253, 224, 71, 0.28), transparent 28%),
+    radial-gradient(circle at 88% 16%, rgba(167, 139, 250, 0.28), transparent 32%),
+    radial-gradient(circle at 92% 88%, rgba(244, 114, 182, 0.24), transparent 34%),
+    radial-gradient(circle at 8% 92%, rgba(34, 211, 238, 0.22), transparent 32%);
+  box-shadow:
+    inset 0 0 42px rgba(34, 211, 238, 0.38),
+    inset 0 0 90px rgba(244, 114, 182, 0.3);
+  opacity: 0.78;
+  animation: dealbuddy-reading-glow-drift 3.6s ease-in-out infinite alternate;
+}
+
+.dealbuddy-reading-card {
+  position: relative;
+  z-index: 1;
+  width: min(520px, calc(100vw - 56px));
+  border: 1px solid rgba(255, 255, 255, 0.48);
+  border-radius: 22px;
+  padding: 20px 24px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #fff;
+  box-shadow:
+    0 24px 70px rgba(15, 23, 42, 0.28),
+    0 0 34px rgba(244, 114, 182, 0.32);
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.34);
+  backdrop-filter: blur(14px);
+  pointer-events: auto;
+}
+
+.dealbuddy-reading-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.dealbuddy-reading-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-align: left;
+}
+
+.dealbuddy-reading-minimize {
+  min-width: 64px;
+  height: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  line-height: 1;
+}
+
+.dealbuddy-reading-minimize:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.dealbuddy-reading-status {
+  margin-top: 9px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 13px;
+  line-height: 1.55;
+  text-align: left;
+}
+
+.dealbuddy-reading-mini {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right));
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 2;
+  display: none;
+  width: min(360px, calc(100vw - 32px));
+  border: 1px solid rgba(255, 255, 255, 0.46);
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: rgba(15, 23, 42, 0.86);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  box-shadow:
+    0 16px 42px rgba(15, 23, 42, 0.28),
+    0 0 22px rgba(34, 211, 238, 0.28);
+  backdrop-filter: blur(12px);
+  pointer-events: auto;
+}
+
+.dealbuddy-reading-mini-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.dealbuddy-reading-mini-status {
+  display: block;
+  margin-top: 3px;
+  overflow: hidden;
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 12px;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dealbuddy-reading-overlay--minimized {
+  inset: auto;
+  display: block;
+  width: 0;
+  height: 0;
+  overflow: visible;
+}
+
+.dealbuddy-reading-overlay--minimized::before,
+.dealbuddy-reading-overlay--minimized::after,
+.dealbuddy-reading-overlay--minimized .dealbuddy-reading-card {
+  display: none;
+}
+
+.dealbuddy-reading-overlay--minimized .dealbuddy-reading-mini {
+  display: block;
+}
+
+@property --dealbuddy-reading-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@keyframes dealbuddy-reading-edge-spin {
+  to {
+    --dealbuddy-reading-angle: 360deg;
+  }
+}
+
+@keyframes dealbuddy-reading-edge-pulse {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.44));
+  }
+
+  50% {
+    filter: drop-shadow(0 0 28px rgba(244, 114, 182, 0.72));
+  }
+}
+
+@keyframes dealbuddy-reading-glow-drift {
+  from {
+    transform: scale(1);
+    opacity: 0.66;
+  }
+
+  to {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dealbuddy-reading-overlay::before,
+  .dealbuddy-reading-overlay::after {
+    animation: none;
+  }
+}
