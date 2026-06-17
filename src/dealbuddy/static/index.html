@@ -1,0 +1,1805 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="DealBuddy 购物搭子，本地购物研究工作台。"
+    />
+    <link rel="icon" href="data:," />
+    <title>DealBuddy 工作台</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f3f5f1;
+        --surface: #fbfcf8;
+        --surface-soft: #eef2ec;
+        --surface-raised: #f7f9f4;
+        --line: #d8ded3;
+        --line-strong: #c4cdbf;
+        --text: #1d241f;
+        --muted: #657267;
+        --muted-strong: #47554a;
+        --accent: #2f6f56;
+        --accent-strong: #244f3f;
+        --accent-soft: #dfeee6;
+        --warn: #865b12;
+        --danger: #a5443d;
+        --danger-soft: #f5e4e1;
+        --shadow: rgba(29, 36, 31, 0.08);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --bg: #0f1210;
+          --surface: #151a16;
+          --surface-soft: #1b211c;
+          --surface-raised: #171d18;
+          --line: rgba(199, 218, 201, 0.14);
+          --line-strong: rgba(199, 218, 201, 0.24);
+          --text: #eff4ee;
+          --muted: #9aa69d;
+          --muted-strong: #c4cec6;
+          --accent: #8fcfb0;
+          --accent-strong: #b0dec6;
+          --accent-soft: rgba(143, 207, 176, 0.13);
+          --warn: #efbd6f;
+          --danger: #ff9b91;
+          --danger-soft: rgba(255, 155, 145, 0.13);
+          --shadow: rgba(3, 7, 4, 0.32);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-height: 100%;
+      }
+
+      body {
+        min-height: 100dvh;
+        margin: 0;
+        background:
+          linear-gradient(180deg, rgba(47, 111, 86, 0.06), transparent 240px),
+          var(--bg);
+        color: var(--text);
+        font-family:
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        align-items: center;
+        border: 1px solid var(--accent);
+        border-radius: 8px;
+        background: var(--accent);
+        color: var(--surface);
+        cursor: pointer;
+        display: inline-flex;
+        font-weight: 650;
+        justify-content: center;
+        min-height: 36px;
+        padding: 7px 12px;
+        white-space: nowrap;
+        transition:
+          background-color 160ms ease,
+          border-color 160ms ease,
+          box-shadow 160ms ease,
+          color 160ms ease,
+          transform 160ms ease;
+      }
+
+      button:hover {
+        background: var(--accent-strong);
+        border-color: var(--accent-strong);
+        box-shadow: 0 8px 20px var(--shadow);
+      }
+
+      button:active {
+        transform: translateY(1px);
+      }
+
+      button:focus-visible,
+      input:focus-visible,
+      summary:focus-visible,
+      textarea:focus-visible {
+        outline: 3px solid var(--accent-soft);
+        outline-offset: 2px;
+      }
+
+      button.secondary {
+        background: transparent;
+        color: var(--accent);
+      }
+
+      button.secondary:hover {
+        background: var(--accent-soft);
+        color: var(--accent-strong);
+      }
+
+      button.danger {
+        background: transparent;
+        border-color: color-mix(in srgb, var(--danger) 55%, var(--line));
+        color: var(--danger);
+      }
+
+      button.danger:hover {
+        background: var(--danger-soft);
+        color: var(--danger);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+        transform: none;
+      }
+
+      input,
+      textarea {
+        min-width: 0;
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--text);
+        padding: 9px 11px;
+        transition:
+          background-color 160ms ease,
+          border-color 160ms ease,
+          box-shadow 160ms ease;
+      }
+
+      input::placeholder,
+      textarea::placeholder {
+        color: var(--muted);
+        opacity: 0.88;
+      }
+
+      input:hover,
+      textarea:hover {
+        border-color: var(--line-strong);
+      }
+
+      textarea {
+        min-height: 82px;
+        resize: vertical;
+      }
+
+      input[type="checkbox"] {
+        accent-color: var(--accent);
+        flex: 0 0 auto;
+        height: 16px;
+        width: 16px;
+      }
+
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: var(--accent-strong);
+        text-decoration: underline;
+        text-underline-offset: 3px;
+      }
+
+      .app-header {
+        background: color-mix(in srgb, var(--surface) 90%, transparent);
+        border-bottom: 1px solid var(--line);
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        backdrop-filter: blur(12px);
+      }
+
+      .header-inner {
+        align-items: center;
+        display: flex;
+        gap: 18px;
+        justify-content: space-between;
+        margin: 0 auto;
+        max-width: 1500px;
+        min-height: 76px;
+        padding: 12px 22px;
+      }
+
+      .brand {
+        min-width: 260px;
+      }
+
+      .brand-name {
+        color: var(--accent);
+        font-size: 13px;
+        font-weight: 750;
+        margin: 0 0 1px;
+      }
+
+      h1,
+      h2,
+      h3,
+      h4,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        font-size: 22px;
+        letter-spacing: 0;
+        line-height: 1.15;
+      }
+
+      h2 {
+        font-size: 16px;
+        letter-spacing: 0;
+        line-height: 1.25;
+      }
+
+      h3,
+      h4 {
+        font-size: 14px;
+        letter-spacing: 0;
+        line-height: 1.25;
+      }
+
+      .header-copy {
+        color: var(--muted);
+        font-size: 13px;
+        margin-top: 5px;
+        max-width: 58ch;
+      }
+
+      .status-row {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .status-chip {
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--muted-strong);
+        display: inline-flex;
+        font-size: 12px;
+        font-weight: 650;
+        min-height: 30px;
+        padding: 5px 9px;
+        white-space: nowrap;
+      }
+
+      .status-chip.warning {
+        border-color: color-mix(in srgb, var(--warn) 38%, var(--line));
+        color: var(--warn);
+      }
+
+      .workspace {
+        display: grid;
+        gap: 16px;
+        grid-template-columns:
+          minmax(270px, 318px)
+          minmax(470px, 1fr)
+          minmax(360px, 440px);
+        margin: 0 auto;
+        max-width: 1500px;
+        padding: 16px 22px 28px;
+      }
+
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        box-shadow: 0 10px 32px var(--shadow);
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .panel-head {
+        align-items: flex-start;
+        border-bottom: 1px solid var(--line);
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        min-height: 56px;
+        padding: 13px 14px;
+      }
+
+      .panel-title {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .panel-body {
+        display: grid;
+        gap: 14px;
+        padding: 14px;
+      }
+
+      .sidebar-body {
+        gap: 16px;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .session-form {
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .session-form .form-actions {
+        justify-content: stretch;
+      }
+
+      .session-form button {
+        background: var(--surface);
+        border-color: var(--line-strong);
+        color: var(--accent-strong);
+        width: 100%;
+      }
+
+      .session-form button:hover {
+        background: var(--accent-soft);
+        border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+        box-shadow: none;
+      }
+
+      .field {
+        display: grid;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .field label,
+      .label-text {
+        color: var(--muted-strong);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .helper,
+      .muted {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .form-actions,
+      .inline-actions {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .session-list {
+        display: grid;
+        gap: 2px;
+        max-height: 34vh;
+        overflow: auto;
+        padding-right: 2px;
+      }
+
+      .session-item {
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        color: var(--text);
+        display: grid;
+        gap: 3px;
+        justify-content: stretch;
+        min-height: auto;
+        padding: 9px 10px;
+        text-align: left;
+        width: 100%;
+      }
+
+      .session-item:hover {
+        background: var(--surface-soft);
+        border-color: var(--line);
+        box-shadow: none;
+        color: var(--text);
+      }
+
+      .session-item.active {
+        background: var(--accent-soft);
+        border-color: color-mix(in srgb, var(--accent) 46%, var(--line));
+        box-shadow: inset 2px 0 0 var(--accent);
+      }
+
+      .session-item strong {
+        font-size: 13px;
+        line-height: 1.3;
+      }
+
+      .session-meta {
+        color: var(--muted);
+        display: flex;
+        flex-wrap: wrap;
+        font-size: 12px;
+        gap: 6px;
+      }
+
+      .disclosure,
+      .offer-card {
+        background: var(--surface-raised);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-width: 0;
+        overflow: hidden;
+      }
+
+      .llm-disclosure {
+        background: transparent;
+      }
+
+      .disclosure > summary,
+      .offer-card > summary {
+        cursor: pointer;
+        list-style: none;
+      }
+
+      .disclosure > summary::-webkit-details-marker,
+      .offer-card > summary::-webkit-details-marker {
+        display: none;
+      }
+
+      .disclosure-summary {
+        align-items: flex-start;
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        padding: 12px;
+      }
+
+      .llm-summary {
+        align-items: stretch;
+        display: block;
+        padding: 10px;
+      }
+
+      .summary-copy {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .settings-title-row {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+        min-width: 0;
+      }
+
+      .summary-action {
+        color: var(--muted);
+        flex: 0 0 auto;
+        font-size: 12px;
+        font-weight: 650;
+      }
+
+      .summary-status {
+        color: var(--muted-strong);
+        font-size: 12px;
+        font-weight: 650;
+        line-height: 1.35;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .disclosure-body {
+        border-top: 1px solid var(--line);
+        display: grid;
+        gap: 12px;
+        min-width: 0;
+        padding: 12px;
+      }
+
+      .llm-body {
+        background: color-mix(in srgb, var(--surface-soft) 70%, transparent);
+        padding: 10px;
+      }
+
+      .privacy-note {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .privacy-note.warning {
+        color: var(--warn);
+      }
+
+      .toggle-row {
+        align-items: flex-start;
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+      }
+
+      .toggle-copy {
+        display: grid;
+        gap: 2px;
+      }
+
+      .field-grid {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: 1fr 1fr;
+        min-width: 0;
+      }
+
+      .provider-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .field-grid .wide {
+        grid-column: 1 / -1;
+      }
+
+      .analysis-stack {
+        display: grid;
+        gap: 14px;
+      }
+
+      .report {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        min-height: 210px;
+        overflow: auto;
+        padding: 14px;
+      }
+
+      .markdown-content {
+        color: var(--text);
+        line-height: 1.65;
+      }
+
+      .markdown-content h1,
+      .markdown-content h2,
+      .markdown-content h3 {
+        color: var(--text);
+        margin: 0 0 8px;
+      }
+
+      .markdown-content h1 {
+        font-size: 20px;
+      }
+
+      .markdown-content h2 {
+        border-top: 1px solid var(--line);
+        font-size: 16px;
+        margin-top: 14px;
+        padding-top: 12px;
+      }
+
+      .markdown-content h3 {
+        font-size: 14px;
+        margin-top: 12px;
+      }
+
+      .markdown-content p {
+        margin: 0 0 9px;
+      }
+
+      .markdown-content blockquote {
+        background: var(--surface-soft);
+        border-left: 3px solid var(--accent);
+        border-radius: 0 8px 8px 0;
+        color: var(--muted-strong);
+        margin: 0 0 12px;
+        padding: 9px 11px;
+      }
+
+      .markdown-content ul {
+        display: grid;
+        gap: 5px;
+        margin: 0 0 12px;
+        padding-left: 20px;
+      }
+
+      .markdown-content code {
+        background: var(--surface-soft);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        font-family:
+          ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Monaco,
+          Consolas,
+          monospace;
+        font-size: 12px;
+        padding: 1px 5px;
+      }
+
+      .conversation {
+        display: grid;
+        gap: 12px;
+      }
+
+      .messages {
+        display: grid;
+        gap: 9px;
+        max-height: 36vh;
+        min-height: 140px;
+        overflow: auto;
+      }
+
+      .message {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        display: grid;
+        gap: 7px;
+        padding: 10px 11px;
+      }
+
+      .message.user {
+        background: var(--accent-soft);
+        border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
+        margin-left: 38px;
+      }
+
+      .message.assistant {
+        background: var(--surface-raised);
+        margin-right: 38px;
+      }
+
+      .message-role {
+        color: var(--muted-strong);
+        font-size: 12px;
+        font-weight: 750;
+      }
+
+      .message.streaming .markdown-content::after {
+        border-right: 2px solid var(--accent);
+        content: "";
+        display: inline-block;
+        height: 1em;
+        margin-left: 3px;
+        vertical-align: -0.15em;
+        animation: caret-blink 900ms steps(1) infinite;
+      }
+
+      @keyframes caret-blink {
+        50% {
+          opacity: 0;
+        }
+      }
+
+      .chat-form {
+        border-top: 1px solid var(--line);
+        display: grid;
+        gap: 10px;
+        padding-top: 12px;
+      }
+
+      .offer-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        max-height: calc(100dvh - 170px);
+        min-height: 0;
+        overflow-x: hidden;
+        overflow-y: auto;
+        padding-right: 2px;
+      }
+
+      .products-panel,
+      .products-panel .panel-body {
+        min-height: 0;
+      }
+
+      .offer-card {
+        flex: 0 0 auto;
+      }
+
+      .offer-card[open] .offer-body {
+        max-height: min(62vh, 720px);
+        overflow: auto;
+      }
+
+      .offer-summary {
+        display: grid;
+        gap: 9px;
+        padding: 12px;
+      }
+
+      .offer-headline {
+        display: grid;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .offer-headline a {
+        color: var(--text);
+        font-weight: 760;
+        line-height: 1.35;
+      }
+
+      .offer-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+
+      .meta-pill {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--muted-strong);
+        font-size: 12px;
+        font-weight: 650;
+        max-width: 100%;
+        overflow: hidden;
+        padding: 4px 7px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .meta-pill.price {
+        border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
+        color: var(--accent-strong);
+      }
+
+      .offer-body {
+        border-top: 1px solid var(--line);
+        display: grid;
+        gap: 12px;
+        min-height: 0;
+        padding: 12px;
+      }
+
+      .offer-insight {
+        background: var(--accent-soft);
+        border: 1px solid color-mix(in srgb, var(--accent) 36%, var(--line));
+        border-radius: 8px;
+        color: var(--accent-strong);
+        font-size: 13px;
+        font-weight: 650;
+        padding: 8px 10px;
+      }
+
+      .detail-grid {
+        align-items: start;
+        display: grid;
+        gap: 8px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .detail-item {
+        display: grid;
+        gap: 2px;
+        min-width: 0;
+      }
+
+      .detail-label {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .detail-value {
+        color: var(--text);
+        overflow-wrap: anywhere;
+      }
+
+      .detail-section {
+        border-top: 1px solid var(--line);
+        display: grid;
+        gap: 8px;
+        padding-top: 10px;
+      }
+
+      .text-block {
+        background: var(--surface);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        color: var(--text);
+        font-family:
+          ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          Monaco,
+          Consolas,
+          monospace;
+        font-size: 12px;
+        line-height: 1.55;
+        margin: 0;
+        max-height: 220px;
+        overflow: auto;
+        padding: 10px;
+        white-space: pre-wrap;
+      }
+
+      .empty-state {
+        align-items: center;
+        background: var(--surface-raised);
+        border: 1px dashed var(--line-strong);
+        border-radius: 8px;
+        color: var(--muted);
+        display: grid;
+        justify-items: start;
+        min-height: 120px;
+        padding: 16px;
+      }
+
+      .empty-state.compact {
+        min-height: 86px;
+      }
+
+      .empty-title {
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 750;
+        margin-bottom: 3px;
+      }
+
+      .notice {
+        color: var(--muted-strong);
+        font-size: 12px;
+        min-height: 18px;
+      }
+
+      .warning {
+        color: var(--warn);
+      }
+
+      .error {
+        color: var(--danger);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          scroll-behavior: auto !important;
+          transition-duration: 1ms !important;
+        }
+      }
+
+      @media (max-width: 1260px) {
+        .workspace {
+          grid-template-columns: minmax(270px, 318px) minmax(420px, 1fr);
+        }
+
+        .products-panel {
+          grid-column: 1 / -1;
+        }
+
+        .offer-list {
+          max-height: none;
+        }
+      }
+
+      @media (max-width: 860px) {
+        .app-header {
+          position: static;
+        }
+
+        .header-inner {
+          align-items: stretch;
+          flex-direction: column;
+          min-height: auto;
+        }
+
+        .status-row {
+          justify-content: flex-start;
+        }
+
+        .workspace {
+          grid-template-columns: 1fr;
+          padding: 12px;
+        }
+
+        .products-panel {
+          grid-column: auto;
+        }
+
+        .field-grid,
+        .detail-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .message.user,
+        .message.assistant {
+          margin-left: 0;
+          margin-right: 0;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand">
+          <p class="brand-name">购物搭子</p>
+          <h1>DealBuddy 工作台</h1>
+          <p class="header-copy">
+            本地采集商品、整理规格、生成报告，并在需要时接入你选择的 LLM。
+          </p>
+        </div>
+        <div class="status-row" aria-label="服务状态">
+          <span class="status-chip" id="service-status">服务检查中</span>
+          <span class="status-chip" id="current-status">当前会话：未选择</span>
+          <span class="status-chip" id="llm-status">LLM：未启用</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <h2>会话</h2>
+            <p class="muted">扩展会把商品投递到当前会话。</p>
+          </div>
+          <button class="secondary" id="refresh-button" type="button">刷新</button>
+        </div>
+        <div class="panel-body sidebar-body">
+          <form class="stack session-form" id="session-form">
+            <div class="field">
+              <label for="category-input">品类</label>
+              <input
+                id="category-input"
+                placeholder="电视 / 扫地机器人 / 手机"
+                required
+              />
+            </div>
+            <div class="field">
+              <label for="request-input">原始需求</label>
+              <textarea
+                id="request-input"
+                placeholder="预算5000以内，65英寸，主要看电影"
+              ></textarea>
+              <p class="helper">用于生成报告上下文，也可以在追问区继续细化。</p>
+            </div>
+            <div class="form-actions">
+              <button type="submit">新建会话</button>
+            </div>
+          </form>
+          <div class="session-list" id="session-list" aria-live="polite"></div>
+
+          <details class="disclosure llm-disclosure" id="llm-settings">
+            <summary class="disclosure-summary llm-summary">
+              <span class="summary-copy">
+                <span class="settings-title-row">
+                  <strong>LLM Provider</strong>
+                  <span class="summary-action">设置</span>
+                </span>
+                <span class="summary-status" id="llm-settings-summary">未启用</span>
+              </span>
+            </summary>
+            <form class="disclosure-body llm-body" id="llm-form">
+              <p class="privacy-note" id="privacy-notice">默认仅本地分析</p>
+              <label class="toggle-row" for="llm-enabled">
+                <input type="checkbox" id="llm-enabled" />
+                <span class="toggle-copy">
+                  <strong>启用外部 LLM</strong>
+                  <span class="helper">未配置时使用本地规则和澄清问题。</span>
+                </span>
+              </label>
+              <div class="field-grid provider-grid">
+                <div class="field">
+                  <label for="llm-provider">Provider 名称</label>
+                  <input id="llm-provider" value="openai-compatible" />
+                </div>
+                <div class="field">
+                  <label for="llm-model">模型名称</label>
+                  <input id="llm-model" placeholder="gpt-4.1-mini" />
+                </div>
+                <div class="field wide">
+                  <label for="llm-base-url">Chat Completions URL</label>
+                  <input
+                    id="llm-base-url"
+                    placeholder="https://api.example.com/v1/chat/completions"
+                  />
+                </div>
+                <div class="field wide">
+                  <label for="llm-api-key">API Key</label>
+                  <input
+                    id="llm-api-key"
+                    placeholder="API Key"
+                    type="password"
+                    autocomplete="off"
+                  />
+                </div>
+              </div>
+              <div class="form-actions">
+                <button type="submit">保存设置</button>
+              </div>
+            </form>
+          </details>
+
+          <div class="notice" id="page-message"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <h2>分析与追问</h2>
+            <p class="muted">报告和对话都保存在当前会话中。</p>
+          </div>
+          <button class="secondary" id="regenerate-report-button" type="button">
+            重新生成
+          </button>
+        </div>
+        <div class="panel-body analysis-stack">
+          <div class="report markdown-content" id="report-view">暂无报告</div>
+          <div class="conversation">
+            <div class="messages" id="messages" aria-live="polite"></div>
+            <form class="chat-form" id="chat-form">
+              <div class="field">
+                <label for="chat-input">追问当前会话</label>
+                <textarea
+                  id="chat-input"
+                  placeholder="例如：这几款里哪一款更适合电影和游戏？"
+                ></textarea>
+              </div>
+              <div class="form-actions">
+                <button id="chat-submit" type="submit">发送</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel products-panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <h2>商品列表</h2>
+            <p class="muted">展开卡片查看完整文本，复制为 Markdown。</p>
+          </div>
+          <span class="status-chip" id="offer-count">0 个商品</span>
+        </div>
+        <div class="panel-body">
+          <div class="offer-list" id="offer-list" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const state = {
+        sessions: [],
+        currentSessionId: null,
+        currentSession: null,
+        chatStreaming: false,
+        reportRegenerating: false,
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      function text(value, fallback = "") {
+        return value === null || value === undefined || value === ""
+          ? fallback
+          : String(value);
+      }
+
+      function escapeHtml(value) {
+        return text(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;");
+      }
+
+      function safeUrl(value) {
+        try {
+          const url = new URL(text(value), window.location.href);
+          return url.protocol === "http:" || url.protocol === "https:" ? url.href : "#";
+        } catch {
+          return "#";
+        }
+      }
+
+      function lineBreaks(value) {
+        return escapeHtml(value).replaceAll("\n", "<br>");
+      }
+
+      function renderInlineMarkdown(value) {
+        const source = text(value);
+        const pattern = /\[([^\]]+)\]\(([^)]+)\)/g;
+        let result = "";
+        let lastIndex = 0;
+        for (const match of source.matchAll(pattern)) {
+          result += escapeHtml(source.slice(lastIndex, match.index));
+          const href = safeUrl(match[2]);
+          result += `<a href="${escapeHtml(href)}" target="_blank" rel="noreferrer">${escapeHtml(match[1])}</a>`;
+          lastIndex = match.index + match[0].length;
+        }
+        result += escapeHtml(source.slice(lastIndex));
+        return result
+          .replace(/`([^`]+)`/g, "<code>$1</code>")
+          .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      }
+
+      function renderMarkdown(markdown) {
+        const source = text(markdown).trim();
+        if (!source) {
+          return `
+            <div class="empty-state compact">
+              <div>
+                <div class="empty-title">暂无报告</div>
+                <div>采集商品后会自动生成本地分析报告。</div>
+              </div>
+            </div>
+          `;
+        }
+        const lines = source.split(/\r?\n/);
+        let html = "";
+        let inList = false;
+        const closeList = () => {
+          if (inList) {
+            html += "</ul>";
+            inList = false;
+          }
+        };
+        for (const line of lines) {
+          const trimmed = line.trim();
+          if (!trimmed) {
+            closeList();
+            continue;
+          }
+          const heading = trimmed.match(/^(#{1,3})\s+(.+)$/);
+          if (heading) {
+            closeList();
+            const level = heading[1].length;
+            html += `<h${level}>${renderInlineMarkdown(heading[2])}</h${level}>`;
+            continue;
+          }
+          const listItem = trimmed.match(/^-\s+(.+)$/);
+          if (listItem) {
+            if (!inList) {
+              html += "<ul>";
+              inList = true;
+            }
+            html += `<li>${renderInlineMarkdown(listItem[1])}</li>`;
+            continue;
+          }
+          const quote = trimmed.match(/^>\s?(.+)$/);
+          if (quote) {
+            closeList();
+            html += `<blockquote>${renderInlineMarkdown(quote[1])}</blockquote>`;
+            continue;
+          }
+          closeList();
+          html += `<p>${renderInlineMarkdown(trimmed)}</p>`;
+        }
+        closeList();
+        return html;
+      }
+
+      async function api(path, options = {}) {
+        const response = await fetch(path, {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            ...(options.headers || {}),
+          },
+        });
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        return response.json();
+      }
+
+      function setMessage(message, isError = false) {
+        $("page-message").textContent = message;
+        $("page-message").className = isError ? "notice error" : "notice";
+      }
+
+      function formatPrice(value) {
+        return value ? `¥${text(value)}` : "未提取";
+      }
+
+      function fieldValue(value, fallback = "未明确") {
+        if (Array.isArray(value)) {
+          return value.length ? value.join("；") : fallback;
+        }
+        return text(value, fallback);
+      }
+
+      function objectEntries(value) {
+        return value && typeof value === "object" && !Array.isArray(value)
+          ? Object.entries(value).filter(([, entryValue]) => text(entryValue))
+          : [];
+      }
+
+      function renderDetailItem(label, value, fallback = "未明确") {
+        return `
+          <div class="detail-item">
+            <span class="detail-label">${escapeHtml(label)}</span>
+            <span class="detail-value">${escapeHtml(fieldValue(value, fallback))}</span>
+          </div>
+        `;
+      }
+
+      function renderKeyValueSection(title, entries) {
+        if (entries.length === 0) {
+          return "";
+        }
+        return `
+          <div class="detail-section">
+            <h4>${escapeHtml(title)}</h4>
+            <div class="detail-grid">
+              ${entries
+                .map(([key, value]) => renderDetailItem(key, value))
+                .join("")}
+            </div>
+          </div>
+        `;
+      }
+
+      function offerToMarkdown(offer, index) {
+        const lines = [
+          `# 商品 ${index + 1}：${text(offer.title, "未命名商品")}`,
+          "",
+          `- 平台：${text(offer.platform, "未明确")}`,
+          `- 链接：${text(offer.url, "未明确")}`,
+          `- 店铺：${text(offer.store_name, "未明确")}`,
+          `- 品牌：${text(offer.brand, "未明确")}`,
+          `- 型号：${text(offer.model, "未明确")}`,
+          `- SKU：${text(offer.sku, "未明确")}`,
+          `- 标价：${text(offer.listed_price, "未明确")}`,
+          `- 页面展示价：${formatPrice(offer.visible_price)}`,
+          `- 估算应付：${formatPrice(offer.estimated_payable)}`,
+          `- 优惠：${text(offer.coupon, "未明确")}`,
+          `- 优惠条件：${fieldValue(offer.conditions)}`,
+          `- 库存：${text(offer.stock, "未明确")}`,
+          `- 可信度：${text(offer.confidence, "未明确")}`,
+          `- 复核时间：${text(offer.verified_at, "未明确")}`,
+        ];
+        if (text(offer.llm_summary)) {
+          lines.push(`- 优劣短评：${text(offer.llm_summary)}`);
+        }
+        const specs = objectEntries(offer.specs);
+        if (specs.length) {
+          lines.push("", "## 规格");
+          for (const [key, value] of specs) {
+            lines.push(`- ${key}：${value}`);
+          }
+        }
+        const parameters = objectEntries(offer.parameters);
+        const parameterLines = parameters.filter(([key]) => key !== "ocr_text");
+        if (parameterLines.length) {
+          lines.push("", "## 页面参数");
+          for (const [key, value] of parameterLines) {
+            lines.push(`- ${key}：${value}`);
+          }
+        }
+        if (offer.parameters?.ocr_text) {
+          lines.push("", "## OCR 文本", "", "```text", offer.parameters.ocr_text, "```");
+        }
+        return lines.join("\n");
+      }
+
+      async function copyText(value) {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(value);
+          return;
+        }
+        const textarea = document.createElement("textarea");
+        textarea.value = value;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand("copy");
+        textarea.remove();
+      }
+
+      function renderOfferCard(offer, index) {
+        const parameters = offer.parameters || {};
+        const parameterEntries = objectEntries(parameters).filter(([key]) => key !== "ocr_text");
+        const specs = objectEntries(offer.specs);
+        const url = safeUrl(offer.url);
+        return `
+          <details class="offer-card">
+            <summary class="offer-summary">
+              <span class="offer-headline">
+                <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">
+                  ${escapeHtml(text(offer.title, "未命名商品"))}
+                </a>
+                <span class="muted">${escapeHtml(text(offer.store_name, "店铺未明确"))}</span>
+              </span>
+              <span class="offer-meta">
+                <span class="meta-pill">${escapeHtml(text(offer.platform, "平台未明确"))}</span>
+                <span class="meta-pill price">${escapeHtml(formatPrice(offer.visible_price))}</span>
+                <span class="meta-pill">SKU ${escapeHtml(text(offer.sku, "未明确"))}</span>
+              </span>
+            </summary>
+            <div class="offer-body">
+              ${
+                text(offer.llm_summary)
+                  ? `<div class="offer-insight">优劣短评：${escapeHtml(text(offer.llm_summary))}</div>`
+                  : ""
+              }
+              <div class="detail-grid">
+                ${renderDetailItem("平台", offer.platform)}
+                ${renderDetailItem("店铺", offer.store_name)}
+                ${renderDetailItem("品牌", offer.brand)}
+                ${renderDetailItem("型号", offer.model)}
+                ${renderDetailItem("SKU", offer.sku)}
+                ${renderDetailItem("页面展示价", formatPrice(offer.visible_price), "未提取")}
+                ${renderDetailItem("估算应付", formatPrice(offer.estimated_payable), "未提取")}
+                ${renderDetailItem("标价", offer.listed_price)}
+                ${renderDetailItem("优惠", offer.coupon)}
+                ${renderDetailItem("优惠条件", offer.conditions)}
+                ${renderDetailItem("库存", offer.stock)}
+                ${renderDetailItem("可信度", offer.confidence)}
+                ${renderDetailItem("复核时间", offer.verified_at)}
+                ${renderDetailItem("链接", offer.url)}
+              </div>
+              ${renderKeyValueSection("规格", specs)}
+              ${renderKeyValueSection("页面参数", parameterEntries)}
+              ${
+                parameters.ocr_text
+                  ? `<div class="detail-section"><h4>OCR 文本</h4><pre class="text-block">${escapeHtml(parameters.ocr_text)}</pre></div>`
+                  : ""
+              }
+              <div class="inline-actions">
+                <button class="secondary" type="button" data-action="copy-offer" data-offer-index="${index}">
+                  复制 Markdown
+                </button>
+                <button class="danger" type="button" data-action="delete-offer" data-offer-index="${index}">
+                  删除
+                </button>
+              </div>
+            </div>
+          </details>
+        `;
+      }
+
+      function renderSessions() {
+        $("current-status").textContent = `当前会话：${state.currentSessionId || "未选择"}`;
+        $("session-list").innerHTML = "";
+        if (state.sessions.length === 0) {
+          $("session-list").innerHTML = `
+            <div class="empty-state compact">
+              <div>
+                <div class="empty-title">还没有会话</div>
+                <div>先输入品类和需求，再用浏览器扩展采集商品。</div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+        for (const session of state.sessions) {
+          const button = document.createElement("button");
+          const isActive = session.session_id === state.currentSessionId;
+          button.type = "button";
+          button.className = `session-item ${isActive ? "active" : ""}`;
+          button.innerHTML = `
+            <strong>${escapeHtml(text(session.requirements.category, "未命名"))}</strong>
+            <span class="session-meta">
+              <span>${escapeHtml(session.session_id)}</span>
+              <span>v${escapeHtml(session.requirements.version)}</span>
+            </span>
+          `;
+          button.addEventListener("click", () => setCurrentSession(session.session_id));
+          $("session-list").appendChild(button);
+        }
+      }
+
+      function scrollMessagesToEnd() {
+        $("messages").scrollTop = $("messages").scrollHeight;
+      }
+
+      function appendChatMessage(message, options = {}) {
+        const empty = $("messages").querySelector(".empty-state");
+        if (empty) {
+          $("messages").innerHTML = "";
+        }
+        const item = document.createElement("div");
+        item.className = `message ${message.role}${options.streaming ? " streaming" : ""}`;
+        const role = document.createElement("div");
+        role.className = "message-role";
+        role.textContent = `${message.role}${message.source ? " / " + message.source : ""}`;
+        const content = document.createElement("div");
+        content.className = "markdown-content";
+        if (message.role === "assistant") {
+          content.innerHTML = renderMarkdown(message.content || "");
+        } else {
+          content.innerHTML = lineBreaks(message.content || "");
+        }
+        item.append(role, content);
+        $("messages").appendChild(item);
+        scrollMessagesToEnd();
+        return { item, role, content };
+      }
+
+      function renderChatMessage(message) {
+        appendChatMessage(message);
+      }
+
+      function updateChatSubmit() {
+        $("chat-submit").disabled = state.chatStreaming;
+        $("chat-input").disabled = state.chatStreaming;
+      }
+
+      function updateReportActions() {
+        const button = $("regenerate-report-button");
+        button.disabled = !state.currentSessionId || state.reportRegenerating;
+        button.textContent = state.reportRegenerating ? "生成中" : "重新生成";
+      }
+
+      async function regenerateReport() {
+        if (!state.currentSessionId || state.reportRegenerating) {
+          return;
+        }
+        state.reportRegenerating = true;
+        updateReportActions();
+        setMessage("正在重新生成报告");
+        try {
+          const payload = await api(
+            `/api/sessions/${state.currentSessionId}/report/regenerate`,
+            { method: "POST", body: "{}" },
+          );
+          state.currentSession = payload.session;
+          state.sessions = state.sessions.map((session) =>
+            session.session_id === payload.session.session_id ? payload.session : session
+          );
+          renderSessions();
+          renderSessionDetail();
+          setMessage("报告已重新生成");
+        } catch (error) {
+          setMessage(String(error), true);
+        } finally {
+          state.reportRegenerating = false;
+          updateReportActions();
+        }
+      }
+
+      function parseSseBlock(block) {
+        const event = { type: "message", data: "" };
+        for (const line of block.split(/\r?\n/)) {
+          if (line.startsWith("event:")) {
+            event.type = line.slice(6).trim();
+          }
+          if (line.startsWith("data:")) {
+            event.data += line.slice(5).trim();
+          }
+        }
+        return event;
+      }
+
+      function handleSseText(buffer, onEvent) {
+        const blocks = buffer.split(/\r?\n\r?\n/);
+        const rest = blocks.pop() || "";
+        for (const block of blocks) {
+          if (block.trim()) {
+            onEvent(parseSseBlock(block));
+          }
+        }
+        return rest;
+      }
+
+      function createTypewriter(target) {
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        let fullText = "";
+        let renderedLength = 0;
+        let timer = null;
+        let finishResolver = null;
+
+        function render() {
+          const remaining = fullText.length - renderedLength;
+          if (remaining <= 0) {
+            timer = null;
+            if (finishResolver) {
+              finishResolver();
+              finishResolver = null;
+            }
+            return;
+          }
+          const step = reducedMotion ? remaining : 2;
+          renderedLength += Math.min(step, remaining);
+          target.innerHTML = renderMarkdown(fullText.slice(0, renderedLength));
+          scrollMessagesToEnd();
+          timer = window.setTimeout(render, reducedMotion ? 0 : 18);
+        }
+
+        function start() {
+          if (!timer) {
+            timer = window.setTimeout(render, 0);
+          }
+        }
+
+        return {
+          push(chunk) {
+            fullText += chunk;
+            start();
+          },
+          finish() {
+            if (fullText.length === renderedLength) {
+              return Promise.resolve();
+            }
+            return new Promise((resolve) => {
+              finishResolver = resolve;
+              start();
+            });
+          },
+          text() {
+            return fullText;
+          },
+        };
+      }
+
+      async function streamChatResponse(content, assistantView) {
+        const response = await fetch(`/api/sessions/${state.currentSessionId}/messages/stream`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content }),
+        });
+        if (!response.ok) {
+          throw new Error(await response.text());
+        }
+        const writer = createTypewriter(assistantView.content);
+        const onEvent = (event) => {
+          const payload = event.data ? JSON.parse(event.data) : {};
+          if (event.type === "delta" && payload.content) {
+            writer.push(payload.content);
+          }
+          if (event.type === "done") {
+            assistantView.role.textContent = `assistant / ${payload.source || "local"}`;
+          }
+        };
+        if (!response.body) {
+          handleSseText(await response.text(), onEvent);
+          await writer.finish();
+          return;
+        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {
+            break;
+          }
+          buffer += decoder.decode(value, { stream: true });
+          buffer = handleSseText(buffer, onEvent);
+        }
+        buffer += decoder.decode();
+        handleSseText(buffer, onEvent);
+        await writer.finish();
+      }
+
+      function renderSessionDetail() {
+        const session = state.currentSession;
+        const offers = session?.verified_offers || [];
+        updateReportActions();
+        $("offer-count").textContent = `${offers.length} 个商品`;
+        $("offer-list").innerHTML = offers.length
+          ? offers.map((offer, index) => renderOfferCard(offer, index)).join("")
+          : `
+            <div class="empty-state">
+              <div>
+                <div class="empty-title">等待商品投递</div>
+                <div>选择当前会话后，在商品详情页使用扩展采集价格、SKU 和规格。</div>
+              </div>
+            </div>
+          `;
+        $("report-view").innerHTML = renderMarkdown(session?.report_markdown || "");
+        $("messages").innerHTML = "";
+        const messages = session?.messages || [];
+        if (messages.length === 0) {
+          $("messages").innerHTML = `
+            <div class="empty-state compact">
+              <div>
+                <div class="empty-title">还没有追问</div>
+                <div>商品进入会话后，可以继续比较、排除和补充偏好。</div>
+              </div>
+            </div>
+          `;
+          return;
+        }
+        for (const message of messages) {
+          renderChatMessage(message);
+        }
+      }
+
+      async function refreshSessions() {
+        const health = await api("/api/health");
+        $("service-status").textContent = health.status === "ok" ? "服务正常" : "服务异常";
+        const payload = await api("/api/sessions");
+        state.sessions = payload.sessions || [];
+        state.currentSessionId = payload.current_session_id || null;
+        renderSessions();
+        if (state.currentSessionId) {
+          await loadSession(state.currentSessionId);
+        } else {
+          state.currentSession = null;
+          renderSessionDetail();
+        }
+        await loadLlmStatus();
+      }
+
+      async function loadSession(sessionId) {
+        const payload = await api(`/api/sessions/${sessionId}`);
+        state.currentSession = payload.session;
+        state.currentSessionId = sessionId;
+        renderSessions();
+        renderSessionDetail();
+      }
+
+      async function setCurrentSession(sessionId) {
+        await api(`/api/sessions/${sessionId}/current`, { method: "POST", body: "{}" });
+        await refreshSessions();
+      }
+
+      async function deleteOffer(index) {
+        if (!state.currentSessionId) {
+          setMessage("请先选择或创建会话", true);
+          return;
+        }
+        if (!window.confirm("确定删除这个商品？")) {
+          return;
+        }
+        await api(`/api/sessions/${state.currentSessionId}/offers/${index}`, {
+          method: "DELETE",
+        });
+        await refreshSessions();
+        setMessage("商品已删除");
+      }
+
+      async function loadLlmStatus() {
+        const status = await api("/api/settings/llm");
+        const summary = status.configured
+          ? `已配置：${status.provider_name} / ${status.model}`
+          : status.enabled
+            ? "待补全配置"
+            : "未启用";
+        $("llm-status").textContent = status.configured ? "LLM：已配置" : `LLM：${summary}`;
+        $("llm-settings-summary").textContent = summary;
+        $("llm-settings-summary").title = summary;
+        $("privacy-notice").textContent = status.configured
+          ? `外部分析已启用，商品数据可能发送到 ${status.provider_name}。`
+          : "默认仅本地分析。开启后只有追问会调用外部 Provider。";
+        $("privacy-notice").className = status.configured
+          ? "privacy-note warning"
+          : "privacy-note";
+        $("llm-enabled").checked = Boolean(status.enabled);
+        $("llm-provider").value = status.provider_name || "openai-compatible";
+        $("llm-base-url").value = status.base_url || "";
+        $("llm-model").value = status.model || "";
+        $("llm-api-key").placeholder = status.api_key_preview || "API Key";
+      }
+
+      $("session-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        try {
+          const payload = await api("/api/sessions", {
+            method: "POST",
+            body: JSON.stringify({
+              category: $("category-input").value,
+              request: $("request-input").value,
+            }),
+          });
+          state.currentSessionId = payload.current_session_id;
+          $("category-input").value = "";
+          $("request-input").value = "";
+          await refreshSessions();
+        } catch (error) {
+          setMessage(String(error), true);
+        }
+      });
+
+      $("chat-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        if (!state.currentSessionId) {
+          setMessage("请先选择或创建会话", true);
+          return;
+        }
+        if (state.chatStreaming) {
+          return;
+        }
+        const content = $("chat-input").value.trim();
+        if (!content) {
+          return;
+        }
+        state.chatStreaming = true;
+        updateChatSubmit();
+        appendChatMessage({ role: "user", content });
+        $("chat-input").value = "";
+        const assistantView = appendChatMessage(
+          { role: "assistant", content: "", source: "生成中" },
+          { streaming: true },
+        );
+        try {
+          await streamChatResponse(content, assistantView);
+          assistantView.item.classList.remove("streaming");
+          await loadSession(state.currentSessionId);
+        } catch (error) {
+          assistantView.item.classList.remove("streaming");
+          assistantView.role.textContent = "assistant / error";
+          assistantView.content.innerHTML = lineBreaks(String(error));
+          setMessage(String(error), true);
+        } finally {
+          state.chatStreaming = false;
+          updateChatSubmit();
+        }
+      });
+
+      $("llm-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        try {
+          await api("/api/settings/llm", {
+            method: "POST",
+            body: JSON.stringify({
+              enabled: $("llm-enabled").checked,
+              provider_name: $("llm-provider").value,
+              base_url: $("llm-base-url").value,
+              model: $("llm-model").value,
+              api_key: $("llm-api-key").value,
+            }),
+          });
+          $("llm-api-key").value = "";
+          await loadLlmStatus();
+          setMessage("设置已保存");
+        } catch (error) {
+          setMessage(String(error), true);
+        }
+      });
+
+      $("offer-list").addEventListener("click", async (event) => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) {
+          return;
+        }
+        const index = Number(button.dataset.offerIndex);
+        const offer = state.currentSession?.verified_offers?.[index];
+        try {
+          if (button.dataset.action === "copy-offer" && offer) {
+            await copyText(offerToMarkdown(offer, index));
+            setMessage("商品 Markdown 已复制");
+          }
+          if (button.dataset.action === "delete-offer") {
+            await deleteOffer(index);
+          }
+        } catch (error) {
+          setMessage(String(error), true);
+        }
+      });
+
+      $("refresh-button").addEventListener("click", () => {
+        refreshSessions().catch((error) => setMessage(String(error), true));
+      });
+
+      $("regenerate-report-button").addEventListener("click", () => {
+        regenerateReport().catch((error) => setMessage(String(error), true));
+      });
+
+      refreshSessions().catch((error) => setMessage(String(error), true));
+    </script>
+  </body>
+</html>
