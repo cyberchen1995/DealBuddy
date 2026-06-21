@@ -1,5 +1,6 @@
 import json
 
+import click
 from typer.testing import CliRunner
 
 from dealbuddy.cli import app
@@ -43,7 +44,7 @@ def test_intake_command_exposes_port_option() -> None:
     result = runner.invoke(app, ["intake", "--help"])
 
     assert result.exit_code == 0
-    assert "--port" in result.stdout
+    assert "--port" in click.unstyle(result.stdout)
 
 
 def test_web_command_exposes_port_option() -> None:
@@ -52,4 +53,4 @@ def test_web_command_exposes_port_option() -> None:
     result = runner.invoke(app, ["web", "--help"])
 
     assert result.exit_code == 0
-    assert "--port" in result.stdout
+    assert "--port" in click.unstyle(result.stdout)
