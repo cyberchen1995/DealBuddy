@@ -5,247 +5,296 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="DealBuddy 购物搭子是本地优先的购物研究工具，把商品页整理成可比较、可追溯的事实。"
+      content="DealBuddy 购物搭子是一款 Chrome 扩展和本地工作台，帮你整理、提取并分析商品页内容。"
     />
     <meta property="og:title" content="DealBuddy 购物搭子" />
     <meta
       property="og:description"
-      content="Capture facts, clarify needs, choose calmly. Local-first shopping research for evidence-led decisions."
+      content="商品页内容太多太杂？DealBuddy 帮你整理、提取并分析。"
     />
     <meta property="og:type" content="website" />
     <meta property="og:image" content="assets/img/chrome-store-promo.png" />
-    <meta name="theme-color" content="#172033" />
+    <meta name="theme-color" content="#08111f" />
     <link rel="icon" href="assets/brand/dealbuddy-mark.svg" />
     <link rel="stylesheet" href="assets/styles.css" />
-    <title>DealBuddy 购物搭子 | Evidence-first shopping research</title>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/gsap.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.7/dist/ScrollTrigger.min.js" defer></script>
+    <script src="assets/app.js" defer></script>
+    <title>DealBuddy 购物搭子 | 本地购物研究工具</title>
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand-link" href="#top" aria-label="DealBuddy home">
+    <header class="site-nav">
+      <a class="nav-brand" href="#top" aria-label="DealBuddy home">
         <img src="assets/brand/dealbuddy-mark.svg" alt="" />
         <span>DealBuddy</span>
       </a>
       <nav aria-label="Primary navigation">
+        <a href="#pain">痛点</a>
         <a href="#workflow">流程</a>
-        <a href="#privacy">边界</a>
+        <a href="#features">功能</a>
         <a href="#install">安装</a>
-        <a href="#github">GitHub</a>
       </nav>
     </header>
 
-    <main id="top">
-      <section class="hero section-shell">
+    <main id="top" class="page-shell">
+      <section class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">Evidence-first shopping research</p>
           <h1>
-            <span>把商品页变成</span>
-            <span>可比较的事实。</span>
+            <span>商品页内容太多太杂？</span>
+            <span>DealBuddy <i class="inline-photo" aria-hidden="true"></i> 帮你</span>
+            <span>整理、提取并分析。</span>
           </h1>
-          <p class="hero-subtitle">
-            <span>本地采集商品、整理规格、生成报告。</span>
-            <span>需要时接入你选择的 LLM。</span>
+          <p>
+            你的购物搭子会把标题、店铺、SKU、价格条件和详情图文字收进本地工作台。安装前，可以先看截图和 GitHub。
           </p>
-          <div class="cta-row" aria-label="Primary actions">
-            <a class="button primary" href="#install">Chrome 商店上架中</a>
-            <a class="button secondary" href="https://github.com/cyberchen1995/DealBuddy">查看 GitHub</a>
+          <div class="hero-actions" aria-label="Primary actions">
+            <a class="button button-primary" href="#install">Chrome Store 审核中</a>
+            <a class="button button-secondary" href="https://github.com/cyberchen1995/DealBuddy">查看 GitHub</a>
           </div>
-          <dl class="hero-facts" aria-label="DealBuddy highlights">
-            <div>
-              <dt>Local-first</dt>
-              <dd>会话和报告默认保存在本机。</dd>
-            </div>
-            <div>
-              <dt>Manual capture</dt>
-              <dd>你打开真实商品页，扩展整理当前页面事实。</dd>
-            </div>
-            <div>
-              <dt>Clear limits</dt>
-              <dd>价格来自页面可见信息，估算应付不等于结算价格。</dd>
-            </div>
-          </dl>
         </div>
-        <div class="hero-media" aria-label="DealBuddy workbench screenshot">
+        <figure class="hero-art motion-image">
           <img
             src="assets/img/workbench.png"
-            alt="DealBuddy 工作台展示会话、分析报告和商品列表。"
+            alt="DealBuddy 工作台，左侧是会话，中间是商品分析报告，右侧是商品列表。"
             width="2560"
             height="1600"
           />
+        </figure>
+      </section>
+
+      <section class="marquee" aria-label="DealBuddy supported surfaces">
+        <div class="marquee-track">
+          <span>淘宝</span>
+          <span>天猫</span>
+          <span>京东</span>
+          <span>SKU</span>
+          <span>OCR</span>
+          <span>Markdown</span>
+          <span>本地会话</span>
+          <span>可选 LLM</span>
+          <span>MCP</span>
+        </div>
+        <div class="marquee-track clone" aria-hidden="true">
+          <span>淘宝</span>
+          <span>天猫</span>
+          <span>京东</span>
+          <span>SKU</span>
+          <span>OCR</span>
+          <span>Markdown</span>
+          <span>本地会话</span>
+          <span>可选 LLM</span>
+          <span>MCP</span>
         </div>
       </section>
 
-      <section class="proof-strip" aria-label="Product promise">
-        <div>
-          <strong>Capture facts</strong>
-          <span>商品标题、店铺、SKU、展示价、优惠条件、采集时间。</span>
-        </div>
-        <div>
-          <strong>Clarify needs</strong>
-          <span>把预算、用途、规格偏好沉淀成可继续追问的会话。</span>
-        </div>
-        <div>
-          <strong>Choose calmly</strong>
-          <span>报告给出依据和边界，不替你下单。</span>
-        </div>
-      </section>
-
-      <section class="section-shell product-section" id="screens">
-        <div class="section-heading">
-          <p class="eyebrow">Real product surfaces</p>
-          <h2>真实界面，而不是营销截图。</h2>
+      <section class="pain-section" id="pain">
+        <div class="chapter-title">
+          <h2>选了半天，最后随便下单。</h2>
           <p>
-            The page uses actual DealBuddy assets: the local workbench, the Chrome extension popup, and a focused report crop from a real session.
+            电视、扫地机、家电、数码配件——越是参数密集的品类，越容易选到最后放弃。
+            不是因为你不努力，是因为信息太散、平台太多、规格都藏在长图里。
           </p>
         </div>
-        <div class="screenshot-grid">
-          <article class="screenshot-card wide">
-            <img
-              src="assets/img/chrome-store-screenshot.png"
-              alt="DealBuddy 工作台截图，展示本地会话、报告和商品列表。"
-              width="1280"
-              height="800"
-            />
-            <div>
-              <h3>工作台 Workbench</h3>
-              <p>创建购物研究会话，接收扩展投递的商品事实，并生成可复制的 Markdown 报告。</p>
-            </div>
+        <div class="pain-grid">
+          <article class="pain-card">
+            <h3>同一款商品，三个平台三个价格，不知道哪个算数</h3>
+            <p>页面展示价、划线价、优惠券、国补、满减混在一起，你看到的价格不是最终付的价格。</p>
           </article>
-          <article class="screenshot-card">
-            <img
-              src="assets/img/extension-popup.png"
-              alt="DealBuddy Chrome 扩展弹窗，包含本地 intake URL 和当前页整理按钮。"
-              width="392"
-              height="700"
-            />
-            <div>
-              <h3>扩展弹窗 Extension</h3>
-              <p>手动整理当前商品页，也可以启用自动采集，并保持默认指向本地服务。</p>
-            </div>
+          <article class="pain-card">
+            <h3>核心参数都在详情长图里，根本没法复制文字</h3>
+            <p>面板类型、刷新率、HDR 规格写在图上，只能靠眼睛看，比较两款时全靠记忆。</p>
           </article>
-          <article class="screenshot-card dark">
-            <img
-              src="assets/img/report-detail.png"
-              alt="DealBuddy 报告细节，列出最符合需求商品、页面展示价和数据可信度。"
-              width="1040"
-              height="1220"
-            />
-            <div>
-              <h3>报告 Report</h3>
-              <p>明确展示价、SKU、匹配原因和数据可信度，避免把页面估算说成最终结算。</p>
-            </div>
+          <article class="pain-card">
+            <h3>收藏了二十款，比到最后越比越乱</h3>
+            <p>开了十几个标签页，草稿里记了一些，最终在哪里存下来都忘了。</p>
+          </article>
+          <article class="pain-card">
+            <h3>问了朋友、刷了评测，还是不知道哪款适合自己</h3>
+            <p>别人的需求不是你的需求，推荐理由里不含你真正在意的条件。</p>
           </article>
         </div>
+        <p class="pain-closing">
+          DealBuddy 不替你下单，也不保证最低价。<br />
+          它只是帮你把所有证据收好，让最终的选择有依据可查。
+        </p>
       </section>
 
-      <section class="workflow section-shell" id="workflow">
-        <div class="section-heading compact">
-          <h2>从商品页到选择建议，四步完成。</h2>
+      <section class="bento-section" id="proof">
+        <div class="chapter-title">
+          <h2>先把商品页整理明白。</h2>
           <p>
-            From product pages to evidence-led choices in four steps.
+            平台、店铺、活动页说法常常不一样。DealBuddy 先把页面信息放到同一个会话里，后面的判断留给你。
           </p>
         </div>
-        <div class="workflow-grid">
-          <article>
-            <span>Open</span>
-            <h3>打开真实商品页</h3>
-            <p>你负责在淘宝、天猫或京东打开候选商品详情页。</p>
+        <div class="bento-grid">
+          <article class="bento-card bento-large group-card">
+            <div class="card-media">
+              <img
+                src="assets/img/chrome-store-screenshot.png"
+                alt="DealBuddy 工作台商品列表和报告截图。"
+                width="1280"
+                height="800"
+              />
+            </div>
+            <div>
+              <h3>不用在十几个标签页之间来回翻。</h3>
+              <p>同一轮购买放进同一个会话。店铺、SKU、页面价格和采集时间放在一起看。</p>
+            </div>
           </article>
-          <article>
-            <span>Capture</span>
-            <h3>整理当前页面事实</h3>
-            <p>扩展采集标题、价格、SKU、店铺、规格文本和可见优惠条件。</p>
+          <article class="bento-card bento-tall">
+            <h3>不替你下单。</h3>
+            <p>页面展示价就是页面展示价。优惠能看懂就写清楚，看不懂就留出来。</p>
+            <p class="quiet">少点催促，多点上下文。</p>
           </article>
-          <article>
-            <span>Compare</span>
-            <h3>在本地工作台比较</h3>
-            <p>同一会话里沉淀候选商品、需求版本、报告和追问历史。</p>
+          <article class="bento-card bento-tall accent">
+            <h3>详情图里的规格，也会尽量提出来。</h3>
+            <p>扩展会等详情图加载，再用本地 OCR 读取文字。图片不需要传到别的服务。</p>
           </article>
-          <article>
-            <span>Report</span>
-            <h3>生成带边界的报告</h3>
-            <p>报告说明依据、缺失信息和价格含义，帮助你做最终判断。</p>
+          <article class="bento-card bento-large group-card">
+            <div class="card-media slim">
+              <img
+                src="assets/img/report-detail.png"
+                alt="DealBuddy 报告细节，包含匹配原因和价格边界。"
+                width="1040"
+                height="1220"
+              />
+            </div>
+            <div>
+              <h3>最后生成一份商品分析报告。</h3>
+              <p>哪些更符合需求，哪些只是看起来便宜，哪些信息还缺，写成可以复制的 Markdown。</p>
+            </div>
           </article>
         </div>
       </section>
 
-      <section class="boundary section-shell" id="privacy">
-        <div class="boundary-copy">
-          <h2>本地优先，边界清楚。</h2>
-          <p>
-            DealBuddy is designed for careful shopping research, not promotion chasing. It keeps default analysis local and only calls an external model after you configure a provider.
+      <section class="accordion-section" id="screens">
+        <div class="chapter-title">
+          <h2>先看截图，再决定要不要安装。</h2>
+          <p>这里放的是当前版本的真实截图：工作台、扩展弹窗、商品分析报告。</p>
+        </div>
+        <div class="accordion" aria-label="Product screens">
+          <article class="accordion-panel">
+            <img src="assets/img/chrome-store-screenshot.png" alt="工作台截图。" />
+            <div>
+              <h3>工作台</h3>
+              <p>创建会话，收商品，看分析结果。</p>
+            </div>
+          </article>
+          <article class="accordion-panel">
+            <img src="assets/img/extension-popup.png" alt="Chrome 扩展弹窗截图。" />
+            <div>
+              <h3>扩展弹窗</h3>
+              <p>整理当前商品页，默认送到本地服务。</p>
+            </div>
+          </article>
+          <article class="accordion-panel">
+            <img src="assets/img/report-detail.png" alt="报告截图。" />
+            <div>
+              <h3>报告</h3>
+              <p>把价格、SKU、匹配原因和缺口放在一页里。</p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="pin-story" id="workflow">
+        <div class="pin-copy">
+          <h2>三步，从商品页到选购报告。</h2>
+          <p class="reveal-line">
+            <span>先打开真实商品页。</span>
+            <span>再让扩展整理当前页。</span>
+            <span>回到工作台看分析报告。</span>
           </p>
         </div>
-        <div class="boundary-list" aria-label="DealBuddy boundaries">
-          <div>
-            <strong>默认本地</strong>
-            <span>会话数据保存在本机目录，工作台只监听 localhost。</span>
-          </div>
-          <div>
-            <strong>可选 LLM</strong>
-            <span>未启用 provider 时，追问区使用本地规则回答。</span>
-          </div>
-          <div>
-            <strong>证据优先</strong>
-            <span>报告保留采集时间、价格定义和可信度提示。</span>
-          </div>
-          <div>
-            <strong>不接管交易</strong>
-            <span>DealBuddy 不进入购物车、订单、结算或支付流程。</span>
-          </div>
+        <div class="pin-gallery">
+          <article class="story-card motion-image">
+            <span>第一步</span>
+            <h3>打开真实商品页。</h3>
+            <p>在淘宝、天猫或京东打开候选商品。你负责找商品，扩展负责整理当前页面事实。DealBuddy 不绕过平台，不接管登录、购物车或支付。</p>
+          </article>
+          <article class="story-card motion-image">
+            <span>第二步</span>
+            <h3>点击扩展整理商品。</h3>
+            <p>扩展采集标题、展示价、SKU、店铺、规格文本，并在本地对详情长图做 OCR 提取图里的参数。不需要手动复制。</p>
+          </article>
+          <article class="story-card motion-image">
+            <span>第三步</span>
+            <h3>工作台生成选购报告。</h3>
+            <p>所有候选商品沉淀到本地工作台，生成带时间戳、价格说明和可信度的 Markdown 报告，还可以追问哪款有妥协、哪些信息缺失。要不要接 LLM，由你定。</p>
+          </article>
         </div>
       </section>
 
-      <section class="install section-shell" id="install">
-        <div class="install-panel">
-          <div>
-            <p class="eyebrow">Chrome Web Store placeholder</p>
-            <h2>扩展上架中，先从源码安装。</h2>
-            <p>
-              The Chrome Web Store URL will replace this placeholder after review. Until then, use the unpacked extension from the repository for local testing.
-            </p>
-          </div>
+      <section class="feature-section" id="features">
+        <div class="chapter-title">
+          <h2>为参数密集型购物决策设计。</h2>
+          <p>每项功能都是为了解决「信息太散、无法对比、证据消失」这一类问题。</p>
+        </div>
+        <div class="feature-grid">
+          <article class="feature-card">
+            <h3>本地 OCR，从详情长图提取规格</h3>
+            <p>扩展在浏览器本地识别商品详情图里的文字。面板类型、接口数量、额定功率——不用再靠眼睛抄，也不上传图片。</p>
+          </article>
+          <article class="feature-card">
+            <h3>价格语义清晰，不混淆</h3>
+            <p>展示价、划线价、可见优惠、估算应付分别标注，注明采集时间和适用条件。估算应付永远不被描述为最终结算价格。</p>
+          </article>
+          <article class="feature-card">
+            <h3>跨平台同时比较</h3>
+            <p>淘宝、天猫、京东的商品可以放进同一个会话，工作台把所有事实并排展示。</p>
+          </article>
+          <article class="feature-card">
+            <h3>每条记录带证据</h3>
+            <p>采集时间、SKU 名称、来源 URL 保留在每条商品记录中，报告是可追溯的事实摘要，不是结论。</p>
+          </article>
+          <article class="feature-card">
+            <h3>本地优先，数据不出本机</h3>
+            <p>会话和报告保存在本机目录，工作台只监听 localhost，不连接外部服务，不需要注册账号。</p>
+          </article>
+          <article class="feature-card">
+            <h3>可选接入 LLM，默认不调用</h3>
+            <p>默认分析使用本地规则。只有你配置了 LLM provider，追问区才向外部模型发请求，界面显示当前 provider。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="install-section" id="install">
+        <div class="install-copy">
+          <h2>Chrome Store 链接会放在这里。</h2>
+          <p>
+            商店审核通过后，主按钮会改成正式安装地址。现在想试，可以从 GitHub 加载未打包扩展。
+          </p>
           <div class="install-actions">
-            <a class="button primary" href="#install" aria-disabled="true">Chrome 商店占位</a>
-            <a class="button secondary" href="https://github.com/cyberchen1995/DealBuddy#%E6%B5%8F%E8%A7%88%E5%99%A8%E6%89%A9%E5%B1%95">源码安装说明</a>
+            <a class="button button-primary" href="#install">Chrome Store 审核中</a>
+            <a
+              class="button button-light"
+              href="https://github.com/cyberchen1995/DealBuddy#%E6%B5%8F%E8%A7%88%E5%99%A8%E6%89%A9%E5%B1%95"
+            >
+              读安装步骤
+            </a>
           </div>
         </div>
-        <ol class="setup-list" aria-label="Local setup steps">
-          <li>
-            <strong>启动本地工作台</strong>
-            <code>uv run dealbuddy web --port 8765</code>
-          </li>
-          <li>
-            <strong>加载未打包扩展</strong>
-            <span>Chrome 扩展管理页选择 <code>extension/dealbuddy-capture/</code>。</span>
-          </li>
-          <li>
-            <strong>整理商品页</strong>
-            <span>打开商品详情页，点击“整理当前商品信息”。</span>
-          </li>
-        </ol>
+        <div class="install-steps">
+          <p><strong>1</strong><span>运行本地服务：<code>uv run dealbuddy web --port 8765</code></span></p>
+          <p><strong>2</strong><span>Chrome 加载 <code>extension/dealbuddy-capture/</code></span></p>
+          <p><strong>3</strong><span>打开商品页，点“整理当前商品信息”。</span></p>
+        </div>
       </section>
 
-      <section class="github section-shell" id="github">
+      <section class="github-section" id="github">
+        <img src="assets/brand/dealbuddy-logo.svg" alt="DealBuddy 购物搭子" width="960" height="320" />
         <div>
-          <img src="assets/brand/dealbuddy-logo.svg" alt="DealBuddy 购物搭子" width="960" height="320" />
-        </div>
-        <div>
-          <h2>Open-source, inspectable, local by default.</h2>
+          <h2>想先看代码，也可以。</h2>
           <p>
-            DealBuddy ships as a Python local service, a Chrome MV3 extension, and an MCP-compatible local endpoint for agent workflows.
+            本地服务、Chrome MV3 扩展和 MCP endpoint 都在仓库里。先看实现，再决定要不要安装。
           </p>
-          <div class="link-grid">
-            <a href="https://github.com/cyberchen1995/DealBuddy">GitHub repository</a>
-            <a href="https://github.com/cyberchen1995/DealBuddy#%E5%BF%AB%E9%80%9F%E5%BC%80%E5%A7%8B">Quick start</a>
-            <a href="https://github.com/cyberchen1995/DealBuddy#MCP-%E5%92%8C%E5%91%BD%E4%BB%A4%E8%A1%8C">MCP and CLI</a>
-          </div>
+          <a class="button button-secondary" href="https://github.com/cyberchen1995/DealBuddy">打开 GitHub</a>
         </div>
       </section>
     </main>
 
     <footer class="site-footer">
       <span>DealBuddy 购物搭子</span>
-      <span>capture facts · clarify needs · choose calmly</span>
       <a href="https://github.com/cyberchen1995/DealBuddy/blob/main/LICENSE">MIT License</a>
     </footer>
   </body>
