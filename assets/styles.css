@@ -672,6 +672,11 @@ h3 {
   font-weight: 900;
 }
 
+.site-footer div {
+  display: flex;
+  gap: 20px;
+}
+
 .site-footer a {
   color: var(--muted);
   font-weight: 750;

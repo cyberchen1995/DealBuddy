@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="DealBuddy 购物搭子 Chrome 扩展隐私政策。" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#08111f" />
+    <link rel="icon" href="../assets/brand/dealbuddy-mark.svg" />
+    <link rel="stylesheet" href="../assets/styles.css" />
+    <title>隐私政策 | DealBuddy 购物搭子</title>
+    <style>
+      .policy-shell {
+        margin: 0 auto;
+        max-width: 760px;
+        padding: 10rem 24px 8rem;
+      }
+
+      .policy-shell h1 {
+        font-size: clamp(2rem, 4vw, 3rem);
+        line-height: 1.1;
+        margin-bottom: 0.5rem;
+      }
+
+      .policy-meta {
+        color: var(--quiet);
+        font-size: 0.9rem;
+        margin-bottom: 4rem;
+      }
+
+      .policy-shell h2 {
+        font-size: clamp(1.1rem, 2vw, 1.4rem);
+        font-weight: 800;
+        line-height: 1.3;
+        margin-top: 3rem;
+        margin-bottom: 1rem;
+        max-width: none;
+      }
+
+      .policy-shell p,
+      .policy-shell li {
+        color: var(--muted);
+        font-size: 1rem;
+        line-height: 1.8;
+        margin-bottom: 0.9rem;
+      }
+
+      .policy-shell ul {
+        margin: 0 0 1rem;
+        padding-left: 1.4rem;
+      }
+
+      .policy-shell li {
+        margin-bottom: 0.4rem;
+      }
+
+      .policy-shell code {
+        word-break: break-all;
+      }
+
+      .policy-divider {
+        border: none;
+        border-top: 1px solid var(--line);
+        margin: 3rem 0;
+      }
+
+      @media (max-width: 680px) {
+        .policy-shell {
+          padding: 8rem 16px 5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-nav">
+      <a class="nav-brand" href="/" aria-label="DealBuddy home">
+        <img src="../assets/brand/dealbuddy-mark.svg" alt="" />
+        <span>DealBuddy</span>
+      </a>
+      <nav aria-label="Primary navigation">
+        <a href="/#pain">痛点</a>
+        <a href="/#workflow">流程</a>
+        <a href="/#features">功能</a>
+        <a href="/#install">安装</a>
+      </nav>
+    </header>
+
+    <main class="policy-shell">
+      <h1>隐私政策</h1>
+      <p class="policy-meta">生效日期：2026-06-21</p>
+
+      <p>
+        DealBuddy 购物搭子是一款 Chrome 扩展，用于在用户访问淘宝、天猫或京东商品详情页时，帮助用户整理当前商品页面中可见的商品信息，并通过浏览器本地 OCR 识别商品详情图片中的文字，辅助用户进行商品比较和购物决策。
+      </p>
+
+      <hr class="policy-divider" />
+
+      <h2>1. 我们处理哪些数据</h2>
+      <p>
+        当用户主动点击"整理当前商品信息"，或开启自动整理功能后，本扩展可能处理当前商品详情页中的以下内容：
+      </p>
+      <ul>
+        <li>商品平台、商品页面 URL、商品标题</li>
+        <li>页面可见价格、店铺名称</li>
+        <li>商品主图、相册图片 URL、详情图片 URL</li>
+        <li>SKU、已选择规格、商品参数、页面详情文字</li>
+        <li>本地 OCR 从商品详情图片中识别出的文字</li>
+        <li>采集时间、OCR 状态、处理警告和置信度</li>
+      </ul>
+      <p>
+        本扩展不会主动收集用户姓名、邮箱、电话号码、身份证件、支付信息、账户密码、健康信息、精确地理位置或个人通信内容。
+      </p>
+
+      <h2>2. 数据用途</h2>
+      <p>本扩展处理上述数据仅用于：</p>
+      <ul>
+        <li>整理当前商品详情页的结构化信息</li>
+        <li>在浏览器本地识别商品详情图片中的文字</li>
+        <li>将整理结果发送到用户配置的本机 DealBuddy intake 服务</li>
+        <li>在发送失败时，允许用户复制整理后的 JSON</li>
+        <li>保存用户设置并提升重复 OCR 的处理效率</li>
+      </ul>
+      <p>
+        本扩展不会将数据用于广告投放、用户画像、跨站跟踪、信用评估、贷款评估或与商品整理无关的用途。
+      </p>
+
+      <h2>3. 数据存储</h2>
+      <p>
+        本扩展会使用 Chrome 扩展本地存储保存用户设置，包括自动整理开关、详情图片加载等待时间和本机 intake 服务地址。
+      </p>
+      <p>
+        本扩展还可能使用浏览器 IndexedDB 缓存 OCR 结果。缓存内容包括图片 URL、该图片识别出的文字和更新时间。该缓存仅用于减少重复 OCR，提高本地处理效率。
+      </p>
+
+      <h2>4. 数据传输</h2>
+      <p>默认情况下，整理后的商品信息会发送到用户本机运行的 DealBuddy intake 服务，默认地址为：</p>
+      <p><code>http://127.0.0.1:8765/api/current/offers</code></p>
+      <p>用户可以在扩展 popup 中修改该地址。请仅填写自己信任的服务地址。</p>
+      <p>
+        为完成本地 OCR，本扩展会下载当前商品页引用的商品图片。图片请求仅限受支持电商平台及其常用图片 CDN 域名，包括 alicdn.com、tbcdn.cn、jd.com、360buyimg.com 和 jdimg.com 等。图片下载用于在浏览器本地识别文字，不会携带网站 cookie。
+      </p>
+
+      <h2>5. 数据共享</h2>
+      <p>本扩展不会出售用户数据。</p>
+      <p>本扩展不会将用户数据分享给广告网络、数据经纪商或无关第三方。</p>
+      <p>
+        除用户主动配置的本机服务地址外，本扩展不会默认将整理后的商品信息发送到第三方云端服务。
+      </p>
+
+      <h2>6. 用户控制</h2>
+      <p>用户可以通过以下方式控制数据处理：</p>
+      <ul>
+        <li>在扩展 popup 中关闭自动整理功能</li>
+        <li>不点击"整理当前商品信息"</li>
+        <li>修改本机 intake 服务地址</li>
+        <li>在 Chrome 扩展管理页面移除本扩展</li>
+        <li>通过浏览器设置清除扩展本地存储和 IndexedDB 缓存</li>
+      </ul>
+
+      <h2>7. 权限说明</h2>
+      <ul>
+        <li><strong>storage</strong> 权限用于保存扩展设置。</li>
+        <li><strong>淘宝、天猫、京东商品页权限</strong>用于读取当前商品详情页中可见的商品内容。</li>
+        <li><strong>图片 CDN 域名权限</strong>用于下载商品详情图片并在浏览器本地执行 OCR。</li>
+        <li><strong>127.0.0.1 和 localhost 权限</strong>用于将用户主动整理的商品信息发送到用户本机运行的 DealBuddy intake 服务。</li>
+      </ul>
+
+      <h2>8. 儿童隐私</h2>
+      <p>本扩展不面向儿童设计，也不会有意收集儿童个人信息。</p>
+
+      <h2>9. 政策更新</h2>
+      <p>如果本扩展的数据处理方式发生变化，我们会更新本隐私政策。</p>
+
+      <h2>10. 联系方式</h2>
+      <p>
+        如对本隐私政策或数据处理方式有疑问，请通过 Chrome Web Store 开发者页面提供的联系方式与我们联系。
+      </p>
+    </main>
+
+    <footer class="site-footer">
+      <span>DealBuddy 购物搭子</span>
+      <a href="https://github.com/cyberchen1995/DealBuddy/blob/main/LICENSE">MIT License</a>
+    </footer>
+  </body>
+</html>
