@@ -56,10 +56,15 @@
     const timedOut = elapsedMs >= maxWaitMs;
     const completed = stableTicks >= stableTicksRequired && elapsedMs >= minWaitMs;
     const done = timedOut || completed;
+    // 供滚动策略判断：图片数仍在增长（如京东分块渲染）时才继续下滚。
+    const detailImageCountGrew = Boolean(
+      previous && detailImageCount > previous.detailImageCount
+    );
 
     return {
       scrollHeight,
       detailImageCount,
+      detailImageCountGrew,
       pendingImageCount,
       elapsedMs,
       atBottom,

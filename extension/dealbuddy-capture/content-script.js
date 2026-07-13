@@ -594,13 +594,20 @@
         480,
         Math.floor(viewportHeight * LAZY_LOAD_SCROLL_STEP_RATIO)
       );
-      // 短距离滚动几轮触发图文详情区懒渲染；详情图地址直接取自 data-src。
-      const targetTop = Math.min(
-        currentScrollTop() + scrollStep,
-        documentScrollHeight()
-      );
-      if (targetTop > currentScrollTop() + 1) {
-        window.scrollTo({ top: targetTop, behavior: "smooth" });
+      // 滚动策略：仅在「还没发现详情图」或「上一拍图片数仍在增长」（京东分块渲染）时
+      // 继续下滚；图片数稳定后停在原地等稳定拍数凑齐，避免无意义翻页。
+      const shouldScroll =
+        !state ||
+        state.detailImageCount === 0 ||
+        state.detailImageCountGrew === true;
+      if (shouldScroll) {
+        const targetTop = Math.min(
+          currentScrollTop() + scrollStep,
+          documentScrollHeight()
+        );
+        if (targetTop > currentScrollTop() + 1) {
+          window.scrollTo({ top: targetTop, behavior: "smooth" });
+        }
       }
       await wait(utils.DEFAULT_LAZY_LOAD_POLL_INTERVAL_MS || 1500);
       state = utils.nextLazyLoadState(state, lazyLoadSnapshot(platform, startedAt), {
@@ -1303,6 +1310,16 @@
     return ocrFrameReadyPromise;
   }
 
+  function warmupOcr() {
+    ensureOcrFrame()
+      .then((frame) => {
+        frame.contentWindow?.postMessage({ type: "dealbuddy:ocr:warmup" }, "*");
+      })
+      .catch(() => {
+        // 预热失败不阻塞采集；真正 OCR 时会再次初始化并报告错误。
+      });
+  }
+
   async function requestOcr(imageUrls, onProgress) {
     const frame = await ensureOcrFrame();
     const requestId = createRequestId();
@@ -1412,15 +1429,22 @@
     if (!isSupportedProductPage(platform)) {
       throw new Error("当前页面不是受支持的商品详情页，请打开商品详情页后重试。");
     }
-    options.onStatus?.("正在打开商品详情区域...");
-    await prepareDetailArea(platform);
-    if (options.waitForDetailImages) {
-      await waitForLazyLoadedDetailImages(platform, options.onStatus, {
-        maxWaitMs: options.detailLoadTimeoutMs || captureSettings.detailLoadTimeoutMs,
-      });
+    // 采集过程会滚动页面触发懒渲染；记录初始位置，结束后还原，避免用户被"翻页"。
+    const initialScrollTop = currentScrollTop();
+    try {
+      options.onStatus?.("正在打开商品详情区域...");
+      await prepareDetailArea(platform);
+      if (options.waitForDetailImages) {
+        await waitForLazyLoadedDetailImages(platform, options.onStatus, {
+          maxWaitMs:
+            options.detailLoadTimeoutMs || captureSettings.detailLoadTimeoutMs,
+        });
+      }
+      options.onStatus?.("正在整理页面字段...");
+      return extractCurrentPage();
+    } finally {
+      window.scrollTo({ top: initialScrollTop, behavior: "auto" });
     }
-    options.onStatus?.("正在整理页面字段...");
-    return extractCurrentPage();
   }
 
   async function runCapture(options = {}) {
@@ -1433,6 +1457,8 @@
     lastCaptureError = "";
     setCaptureStatus("running", "正在准备商品详情页...");
     showReadingOverlay("正在准备商品详情页...");
+    // OCR 预热：加载 iframe + 模型与"等详情图"并行，首次采集省下数秒初始化时间。
+    warmupOcr();
 
     try {
       const updateStatus = (message) => {

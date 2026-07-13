@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "DealBuddy 购物搭子",
   "description": "淘宝、天猫、京东商品详情采集搭子，本地分析整理，辅助你轻松做出购物决策。建议搭配 intake 服务使用，也可复制已提取的商品信息到任意智能体中使用。",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "icons": {
     "16": "icons/dealbuddy-16.png",
     "32": "icons/dealbuddy-32.png",
@@ -19,7 +19,9 @@
     },
     "default_popup": "popup.html"
   },
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "http://127.0.0.1/*",
     "http://localhost/*",
@@ -47,13 +49,17 @@
         "auto-capture-utils.js",
         "content-script.js"
       ],
-      "css": ["content-style.css"],
+      "css": [
+        "content-style.css"
+      ],
       "run_at": "document_idle"
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["ocr-frame.html"],
+      "resources": [
+        "ocr-frame.html"
+      ],
       "matches": [
         "https://*.taobao.com/*",
         "https://*.tmall.com/*",

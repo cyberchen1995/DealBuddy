@@ -34,6 +34,25 @@ test("lazy-load wait stops after two stable detail-image checks and a short dwel
   assert.equal(state.reason, "stable");
 });
 
+test("state reports detail image growth so the scroll policy can keep paging", () => {
+  const base = { scrollHeight: 5000, atBottom: false };
+
+  let state = nextLazyLoadState(null, { ...base, detailImageCount: 0, elapsedMs: 1200 });
+  assert.equal(state.detailImageCountGrew, false);
+
+  // 京东分块渲染：图片数增长 → 标记增长，滚动策略继续下滚。
+  state = nextLazyLoadState(state, { ...base, detailImageCount: 12, elapsedMs: 2400 });
+  assert.equal(state.detailImageCountGrew, true);
+
+  state = nextLazyLoadState(state, { ...base, detailImageCount: 30, elapsedMs: 3600 });
+  assert.equal(state.detailImageCountGrew, true);
+
+  // 图片数稳定 → 不再增长，滚动策略停在原地等稳定拍数。
+  state = nextLazyLoadState(state, { ...base, detailImageCount: 30, elapsedMs: 4800 });
+  assert.equal(state.detailImageCountGrew, false);
+  assert.equal(state.stableTicks, 1);
+});
+
 test("lazy-load wait resets stability when the page keeps growing", () => {
   let state = nextLazyLoadState(null, {
     scrollHeight: 2400,

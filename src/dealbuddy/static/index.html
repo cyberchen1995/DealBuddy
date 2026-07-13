@@ -1799,6 +1799,66 @@
         regenerateReport().catch((error) => setMessage(String(error), true));
       });
 
+      // 实时同步：扩展采集商品后，工作台自动刷新当前会话，无需手动点"刷新"。
+      // 仅在页面可见、非流式回答、无表单输入焦点时比对；有变化才重渲染。
+      const LIVE_SYNC_INTERVAL_MS = 4000;
+      const LIVE_SYNC_SKIP_FOCUS_IDS = new Set([
+        "chat-input",
+        "category-input",
+        "request-input",
+      ]);
+
+      function sessionSyncKey(session) {
+        if (!session) {
+          return "";
+        }
+        const offerCount = (session.verified_offers || []).length;
+        const messageCount = (session.messages || []).length;
+        return `${session.updated_at}|${offerCount}|${messageCount}`;
+      }
+
+      async function liveSyncCurrentSession(force = false) {
+        if (!force && document.visibilityState !== "visible") {
+          return;
+        }
+        if (state.chatStreaming || state.reportRegenerating) {
+          return;
+        }
+        if (LIVE_SYNC_SKIP_FOCUS_IDS.has(document.activeElement?.id)) {
+          return;
+        }
+        if (!state.currentSessionId) {
+          return;
+        }
+        try {
+          const payload = await api(`/api/sessions/${state.currentSessionId}`);
+          const next = payload.session;
+          const nextKey = sessionSyncKey(next);
+          const currentKey = sessionSyncKey(state.currentSession);
+          if (nextKey === currentKey) {
+            return;
+          }
+          const previousCount = (state.currentSession?.verified_offers || []).length;
+          state.currentSession = next;
+          renderSessionDetail();
+          const nextCount = (next.verified_offers || []).length;
+          if (nextCount > previousCount) {
+            setMessage(`已同步 ${nextCount - previousCount} 个新采集商品`);
+          }
+        } catch (_error) {
+          // 轮询失败静默跳过，下一轮重试；手动"刷新"仍会显示错误。
+        }
+      }
+
+      window.setInterval(() => liveSyncCurrentSession(), LIVE_SYNC_INTERVAL_MS);
+
+      // 从商品页切回工作台时立即同步一次，不必等下一个轮询周期。
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") {
+          liveSyncCurrentSession(true);
+        }
+      });
+
       refreshSessions().catch((error) => setMessage(String(error), true));
     </script>
   </body>
