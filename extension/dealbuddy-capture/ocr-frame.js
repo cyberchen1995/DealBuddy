@@ -186,6 +186,11 @@ window.addEventListener("message", (event) => {
   const message = event.data || {};
   if (message.type === "dealbuddy:ocr:start") {
     void handleOcrRequest(message);
+    return;
+  }
+  if (message.type === "dealbuddy:ocr:warmup") {
+    // 采集等待期并行加载模型；失败不上报，正式识别时会重试并给出错误。
+    ensureOcrReady().catch(() => {});
   }
 });
 

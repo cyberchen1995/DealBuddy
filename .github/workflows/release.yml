@@ -1,0 +1,63 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Python dependencies
+        run: uv sync
+      - name: Python tests
+        run: uv run pytest
+      - name: Ruff
+        run: uv run ruff check .
+      - name: Extension tests
+        run: node --test "tests/extension/**/*.test.cjs"
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify tag matches project versions
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PY_VERSION="$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)"
+          EXT_VERSION="$(python3 -c 'import json;print(json.load(open("extension/dealbuddy-capture/manifest.json"))["version"])')"
+          echo "tag=$TAG_VERSION pyproject=$PY_VERSION manifest=$EXT_VERSION"
+          if [ "$TAG_VERSION" != "$PY_VERSION" ] || [ "$TAG_VERSION" != "$EXT_VERSION" ]; then
+            echo "::error::Tag version does not match pyproject.toml / manifest.json"
+            exit 1
+          fi
+      - name: Package Chrome extension
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cd extension
+          zip -r "../dealbuddy-capture-${VERSION}.zip" dealbuddy-capture \
+            -x "*.DS_Store" -x "*/.DS_Store"
+          cd ..
+          unzip -l "dealbuddy-capture-${VERSION}.zip" | tail -3
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gh release create "$GITHUB_REF_NAME" \
+            "dealbuddy-capture-${VERSION}.zip" \
+            --title "DealBuddy $GITHUB_REF_NAME" \
+            --generate-notes

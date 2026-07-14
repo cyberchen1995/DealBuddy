@@ -1,7 +1,7 @@
 [project]
 name = "dealbuddy"
-version = "0.1.0"
-description = "Local shopping research: manual capture (browser extension) + local intake"
+version = "0.3.0"
+description = "Local-first shopping research: manual browser capture + local web workbench with optional LLM and MCP"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [

@@ -48,6 +48,22 @@ test("pickOcrImageUrls supports an explicit image limit", () => {
   ]);
 });
 
+test("pickOcrImageUrls skips animated gif detail images (no spec text, saves OCR time)", () => {
+  const urls = pickOcrImageUrls({
+    detail_image_urls: [
+      "https://img.alicdn.com/spec.jpg",
+      "https://img.alicdn.com/demo.gif",
+      "https://img.alicdn.com/demo2.GIF?x=1",
+      "https://img.alicdn.com/table.png",
+    ],
+  });
+
+  assert.deepEqual(urls, [
+    "https://img.alicdn.com/spec.jpg",
+    "https://img.alicdn.com/table.png",
+  ]);
+});
+
 test("mergeOcrResult adds searchable OCR text and improves confidence", () => {
   const payload = {
     title: "石头 P20",

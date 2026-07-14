@@ -147,3 +147,16 @@ test("detail image extraction collects from the description container without bo
   assert.doesNotMatch(source, /isBeforeRecommendationBoundary/);
   assert.doesNotMatch(source, /filterDetailElementsBeforeRecommendation/);
 });
+
+test("capture restores the user's scroll position and warms up OCR in parallel", () => {
+  const source = readContentScript();
+
+  // 采集会滚动页面触发懒渲染，结束后必须还原用户初始位置
+  assert.match(source, /initialScrollTop/);
+  assert.match(source, /top: initialScrollTop, behavior: "auto"/);
+  // 图片数稳定后停止下滚，仅在未发现或仍在增长时继续翻页
+  assert.match(source, /detailImageCountGrew/);
+  // OCR 预热与详情图等待并行
+  assert.match(source, /dealbuddy:ocr:warmup/);
+  assert.match(source, /warmupOcr\(\)/);
+});
