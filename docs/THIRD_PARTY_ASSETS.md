@@ -52,13 +52,19 @@ Before publishing a tagged public release, maintainers should record:
 
 Assets that fail this gate should be removed from the repository and replaced with documented local download or build instructions.
 
-**Status as of 2026-07-13: gate not passed.** `tailwind-BsAsd_7a.js`, `api-CHoCPO3e.js`, and the
+**Status as of 2026-07-14.** `tailwind-BsAsd_7a.js`, `api-CHoCPO3e.js`, and the
 non-onnxruntime-web portion of `reference-compare-runtime.js` and `esearch-ocr-DkjV-qK3.js` are
 extracted output from an unidentified third-party Chrome extension with no retained license —
 `api-CHoCPO3e.js` in particular contains that extension's own product feature code
-(`compareList`). These are fine for internal/dev use but should not ship in a public-facing
-release (Chrome Web Store listing, public GitHub release announcement) until replaced with a
-from-scratch OCR harness built directly on the official `onnxruntime-web` npm package, or the
-original extension's author grants explicit redistribution permission. The wasm backend, both
-`.onnx` models, and the dictionary file are independently confirmed clean (MIT / Apache-2.0) and
-do not block release.
+(`compareList`). The wasm backend, both `.onnx` models, and the dictionary file are
+independently confirmed clean (MIT / Apache-2.0).
+
+Scope of the gate, stated precisely:
+
+- **GitHub source releases (tags/zips of this repository): acceptable with this caveat
+  documented.** The repository itself has been public with these files since 0.2.0, so a
+  tagged release adds no new redistribution exposure; this file is the disclosure.
+- **Chrome Web Store listing or bundling the extension into promoted binary downloads:
+  blocked** until the three unverified bundles are replaced with a from-scratch OCR harness
+  built directly on the official `onnxruntime-web` npm package (MIT), or the original
+  extension's author grants explicit redistribution permission. Tracked as a known issue.
