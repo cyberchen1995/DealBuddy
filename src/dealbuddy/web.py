@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
+import socket
+import threading
+import time
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
+from urllib import error as urlerror
 from urllib import request as urlrequest
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urlunparse
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import (
@@ -61,6 +65,13 @@ class LLMSettingsRequest(BaseModel):
     api_key: str = ""
 
 
+class LLMTestRequest(BaseModel):
+    provider_name: str = ""
+    base_url: str = ""
+    model: str = ""
+    api_key: str = ""
+
+
 def _jsonable(value: object) -> object:
     return to_jsonable_python(value)
 
@@ -94,17 +105,18 @@ def _append_message(
     content: str,
     source: Literal["local", "llm"] | None = None,
 ) -> ShoppingSession:
-    session = store.load(session_id)
-    message: dict[str, Any] = {
-        "role": role,
-        "content": content,
-        "created_at": _now_iso(),
-    }
-    if source:
-        message["source"] = source
-    session.messages.append(message)
-    store.save(session)
-    return session
+    with _WRITE_LOCK:
+        session = store.load(session_id)
+        message: dict[str, Any] = {
+            "role": role,
+            "content": content,
+            "created_at": _now_iso(),
+        }
+        if source:
+            message["source"] = source
+        session.messages.append(message)
+        store.save(session)
+        return session
 
 
 def _conversation_context(session: ShoppingSession) -> list[dict[str, str]]:
@@ -236,13 +248,32 @@ def _llm_chat_payload(
     return payload
 
 
+def _llm_endpoint(settings: LLMSettings) -> str:
+    """归一化地址：裸域名补 /v1/chat/completions、/v1 结尾补 /chat/completions，
+    其余（完整端点、自建网关路径）逐字保留；只改 path、保留 query。"""
+    url = settings.base_url.strip()
+    if not url:
+        return url
+    parts = urlparse(url)
+    path = parts.path.rstrip("/")
+    if path.endswith("/chat/completions"):
+        new_path = path
+    elif path.endswith("/v1"):
+        new_path = f"{path}/chat/completions"
+    elif path in ("", "/"):
+        new_path = "/v1/chat/completions"
+    else:
+        new_path = path
+    return urlunparse(parts._replace(path=new_path))
+
+
 def _llm_request(
     settings: LLMSettings,
     payload: dict[str, object],
 ) -> urlrequest.Request:
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     return urlrequest.Request(
-        settings.base_url,
+        _llm_endpoint(settings),
         data=data,
         headers={
             "Authorization": f"Bearer {settings.api_key}",
@@ -348,6 +379,70 @@ def call_llm_provider_stream(
                 yield str(content_delta)
 
 
+def test_llm_connection(settings: LLMSettings) -> dict[str, object]:
+    """服务器端连通性诊断：把浏览器里一句裸的 Failed to fetch 换成可行动的结论。"""
+    if not settings.base_url or not settings.model or not settings.api_key:
+        missing = [
+            label
+            for label, value in (
+                ("URL", settings.base_url),
+                ("模型", settings.model),
+                ("API Key", settings.api_key),
+            )
+            if not value
+        ]
+        return {"ok": False, "message": f"缺少配置：{'、'.join(missing)}"}
+    endpoint = _llm_endpoint(settings)
+    payload = {
+        "model": settings.model,
+        "messages": [{"role": "user", "content": "ping"}],
+        "max_tokens": 8,
+    }
+    started = time.monotonic()
+    http_request = _llm_request(settings, payload)
+    try:
+        with urlrequest.urlopen(http_request, timeout=10) as response:
+            body = json.loads(response.read().decode("utf-8"))
+    except urlerror.HTTPError as exc:
+        hint = "检查 API Key" if exc.code in {401, 403} else "检查 URL 与模型名称"
+        return {
+            "ok": False,
+            "endpoint": endpoint,
+            "message": f"HTTP {exc.code} {exc.reason}（{hint}）",
+        }
+    except urlerror.URLError as exc:
+        reason = exc.reason
+        if isinstance(reason, socket.gaierror):
+            message = "域名解析失败，请检查 URL"
+        elif isinstance(reason, ConnectionRefusedError):
+            message = "连接被拒绝，请检查地址与端口"
+        elif isinstance(reason, TimeoutError):
+            message = "连接超时（10 秒），请检查网络或代理"
+        else:
+            message = f"网络错误：{reason}"
+        return {"ok": False, "endpoint": endpoint, "message": message}
+    except TimeoutError:
+        return {"ok": False, "endpoint": endpoint, "message": "连接超时（10 秒）"}
+    except Exception as exc:  # noqa: BLE001
+        return {"ok": False, "endpoint": endpoint, "message": f"请求失败：{exc}"}
+    latency_ms = int((time.monotonic() - started) * 1000)
+    try:
+        content = body["choices"][0]["message"]
+    except (KeyError, IndexError, TypeError):
+        return {
+            "ok": False,
+            "endpoint": endpoint,
+            "message": "已连通，但响应不是 OpenAI Chat Completions 格式，请确认 URL",
+        }
+    del content
+    return {
+        "ok": True,
+        "endpoint": endpoint,
+        "latency_ms": latency_ms,
+        "message": f"连接成功（{latency_ms}ms）",
+    }
+
+
 def _typewriter_chunks(content: str, size: int = 8) -> Iterator[str]:
     for index in range(0, len(content), size):
         yield content[index : index + size]
@@ -450,16 +545,7 @@ def call_llm_offer_summaries(
             },
         ],
     }
-    data = json.dumps(prompt, ensure_ascii=False).encode("utf-8")
-    http_request = urlrequest.Request(
-        settings.base_url,
-        data=data,
-        headers={
-            "Authorization": f"Bearer {settings.api_key}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
+    http_request = _llm_request(settings, prompt)
     with urlrequest.urlopen(http_request, timeout=30) as response:
         payload = json.loads(response.read().decode("utf-8"))
     try:
@@ -487,6 +573,33 @@ def call_llm_offer_summaries(
     return summaries
 
 
+def _run_in_background(task: Callable[[], None]) -> None:
+    """在后台线程执行任务；测试可 monkeypatch 为内联执行。"""
+    threading.Thread(target=task, daemon=True).start()
+
+
+# 会话是「加载→变更→保存」整文件覆盖写。所有会话写路径共用这把进程内写锁，
+# 避免后台摘要线程与前台采集/追问/refine 互相覆盖（LLM 调用一律在锁外进行）。
+_WRITE_LOCK = threading.RLock()
+
+
+def _schedule_offer_summaries(
+    store: SessionStore,
+    config_store: ConfigStore,
+    session_id: str,
+) -> None:
+    """LLM 短评是可选增强：放后台跑，不能拖住采集入库或设置保存。"""
+
+    def task() -> None:
+        try:
+            session = store.load(session_id)
+        except FileNotFoundError:
+            return
+        maybe_add_llm_offer_summaries(store, config_store, session)
+
+    _run_in_background(task)
+
+
 def maybe_add_llm_offer_summaries(
     store: SessionStore,
     config_store: ConfigStore,
@@ -502,22 +615,28 @@ def maybe_add_llm_offer_summaries(
     ]
     if not missing:
         return session
+    # LLM 调用在锁外（可能耗时数十秒），期间前台可继续采集/追问。
     try:
         summaries = call_llm_offer_summaries(llm, session, missing)
     except Exception:  # noqa: BLE001
         return session
-    changed = False
-    for item in session.verified_offers:
-        if item.get("llm_summary"):
-            continue
-        summary = summaries.get(str(item.get("url") or ""))
-        if summary:
-            item["llm_summary"] = summary
-            changed = True
-    if changed:
-        rebuild_session_report(session)
-        store.save(session)
-    return session
+    if not summaries:
+        return session
+    # 回来后重新加载最新会话，只按 URL 合并 llm_summary，避免覆盖并发写入。
+    with _WRITE_LOCK:
+        fresh = store.load(session.session_id)
+        changed = False
+        for item in fresh.verified_offers:
+            if item.get("llm_summary"):
+                continue
+            summary = summaries.get(str(item.get("url") or ""))
+            if summary:
+                item["llm_summary"] = summary
+                changed = True
+        if changed:
+            rebuild_session_report(fresh)
+            store.save(fresh)
+        return fresh
 
 
 def add_offer_to_session(
@@ -526,8 +645,10 @@ def add_offer_to_session(
     session_id: str,
     payload: CapturePayload,
 ) -> ShoppingSession:
-    session = add_capture_to_session(store, session_id, payload)
-    return maybe_add_llm_offer_summaries(store, config_store, session)
+    with _WRITE_LOCK:
+        session = add_capture_to_session(store, session_id, payload)
+    _schedule_offer_summaries(store, config_store, session_id)
+    return session
 
 
 def regenerate_session_report(
@@ -535,21 +656,26 @@ def regenerate_session_report(
     config_store: ConfigStore,
     session_id: str,
 ) -> ShoppingSession:
-    session = store.load(session_id)
-    session.requirements.version += 1
-    report = build_session_report_with_context(session)
+    snapshot = store.load(session_id)
+    snapshot.requirements.version += 1
+    report = build_session_report_with_context(snapshot)
     llm = config_store.load().llm
     if llm.configured:
+        # LLM 调用在锁外，避免长时间阻塞其它会话写入。
         try:
-            report = call_llm_report_provider(llm, session, report)
+            report = call_llm_report_provider(llm, snapshot, report)
         except Exception as exc:  # noqa: BLE001
             report = (
                 f"{report.rstrip()}\n\n"
                 f"> LLM 报告重生成失败，已保留本地报告：{exc}\n"
             )
-    session.report_markdown = _ensure_report_metadata(session, report)
-    store.save(session)
-    return session
+    # 重新加载最新会话再落盘：保住 LLM 期间并发采集/追问的写入，只更新版本与报告。
+    with _WRITE_LOCK:
+        session = store.load(session_id)
+        session.requirements.version = snapshot.requirements.version
+        session.report_markdown = _ensure_report_metadata(session, report)
+        store.save(session)
+        return session
 
 
 def answer_session(
@@ -731,11 +857,13 @@ def _call_mcp_tool(
             "report_available": bool(session.report_markdown),
         }
     if name == "refine_requirements":
-        return {
-            "session": store.refine(
+        with _WRITE_LOCK:
+            refined = store.refine(
                 str(arguments["session_id"]),
                 arguments["changes"],
             )
+        return {
+            "session": refined
         }
     if name == "get_report":
         session = store.load(str(arguments["session_id"]))
@@ -804,7 +932,7 @@ def create_app(
 ) -> FastAPI:
     resolved_store = store or SessionStore()
     resolved_config_store = config_store or ConfigStore()
-    app = FastAPI(title="DealBuddy", version="0.1.0")
+    app = FastAPI(title="DealBuddy", version="0.3.0")
 
     @app.middleware("http")
     async def cors_for_extension_intake(
@@ -896,15 +1024,16 @@ def create_app(
 
     @app.delete("/api/sessions/{session_id}/offers/{offer_index}")
     def delete_session_offer(session_id: str, offer_index: int) -> dict[str, object]:
-        try:
-            session = resolved_store.load(session_id)
-        except FileNotFoundError as exc:
-            raise HTTPException(404, str(exc)) from exc
-        if offer_index < 0 or offer_index >= len(session.verified_offers):
-            raise HTTPException(404, f"Unknown offer index: {offer_index}")
-        removed_offer = session.verified_offers.pop(offer_index)
-        rebuild_session_report(session)
-        resolved_store.save(session)
+        with _WRITE_LOCK:
+            try:
+                session = resolved_store.load(session_id)
+            except FileNotFoundError as exc:
+                raise HTTPException(404, str(exc)) from exc
+            if offer_index < 0 or offer_index >= len(session.verified_offers):
+                raise HTTPException(404, f"Unknown offer index: {offer_index}")
+            removed_offer = session.verified_offers.pop(offer_index)
+            rebuild_session_report(session)
+            resolved_store.save(session)
         return {
             "status": "ok",
             "session_id": session.session_id,
@@ -916,7 +1045,8 @@ def create_app(
 
     @app.post("/api/sessions/{session_id}/refine")
     def refine_session(session_id: str, payload: RefineRequest) -> dict[str, object]:
-        return {"session": resolved_store.refine(session_id, payload.changes)}
+        with _WRITE_LOCK:
+            return {"session": resolved_store.refine(session_id, payload.changes)}
 
     @app.get("/api/sessions/{session_id}/report")
     def get_report(session_id: str) -> dict[str, str]:
@@ -985,17 +1115,32 @@ def create_app(
         )
         resolved_config_store.save(config)
         if config.llm.configured and config.current_session_id:
-            try:
-                session = resolved_store.load(config.current_session_id)
-            except FileNotFoundError:
-                pass
-            else:
-                maybe_add_llm_offer_summaries(
-                    resolved_store,
-                    resolved_config_store,
-                    session,
-                )
+            _schedule_offer_summaries(
+                resolved_store,
+                resolved_config_store,
+                config.current_session_id,
+            )
         return resolved_config_store.public_llm_status()
+
+    @app.post("/api/settings/llm/test")
+    def test_llm_settings(
+        payload: LLMTestRequest,
+        request: Request,
+    ) -> dict[str, object]:
+        # 该端点会用调用方给的 base_url 发出站请求（可携带已存密钥），
+        # 因此与 /mcp 同标准：只接受本机来源，挡住电商页脚本的跨站 SSRF / 内网探测。
+        if not _is_trusted_mcp_origin(request.headers.get("origin")):
+            raise HTTPException(403, "Untrusted Origin")
+        saved = resolved_config_store.load().llm
+        draft = LLMSettings(
+            enabled=True,
+            provider_name=(payload.provider_name or saved.provider_name).strip()
+            or "openai-compatible",
+            base_url=(payload.base_url or saved.base_url).strip(),
+            model=(payload.model or saved.model).strip(),
+            api_key=(payload.api_key or saved.api_key).strip(),
+        )
+        return test_llm_connection(draft)
 
     @app.post("/mcp")
     async def mcp_endpoint(request: Request) -> JSONResponse:
@@ -1010,7 +1155,7 @@ def create_app(
                 result: object = {
                     "protocolVersion": "2025-06-18",
                     "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "dealbuddy", "version": "0.1.0"},
+                    "serverInfo": {"name": "dealbuddy", "version": "0.3.0"},
                 }
             elif method == "tools/list":
                 result = {"tools": _mcp_tool_schemas()}

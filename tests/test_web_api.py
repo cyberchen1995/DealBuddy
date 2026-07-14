@@ -238,6 +238,7 @@ def test_web_chat_streams_llm_delta_chunks_and_persists_messages(
         )
 
     monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", fake_urlopen)
+    monkeypatch.setattr("dealbuddy.web._run_in_background", lambda task: task())
     client = TestClient(create_app())
     session_id = client.post(
         "/api/sessions",
@@ -350,6 +351,7 @@ def test_web_regenerate_report_sends_conversation_to_llm(
         )
 
     monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", fake_urlopen)
+    monkeypatch.setattr("dealbuddy.web._run_in_background", lambda task: task())
     client = TestClient(create_app())
     session_id = client.post(
         "/api/sessions",
@@ -460,6 +462,7 @@ def test_web_adds_llm_offer_summary_to_offer_and_report(
         )
 
     monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", fake_urlopen)
+    monkeypatch.setattr("dealbuddy.web._run_in_background", lambda task: task())
     client = TestClient(create_app())
     session_id = client.post(
         "/api/sessions",
@@ -495,3 +498,213 @@ def test_web_serves_static_workbench(tmp_path, monkeypatch) -> None:
     assert "/messages/stream" in response.text
     assert "/report/regenerate" in response.text
     assert "state.sessions = state.sessions.map" in response.text
+
+
+def test_llm_endpoint_normalizes_partial_base_urls() -> None:
+    from dealbuddy.config import LLMSettings
+    from dealbuddy.web import _llm_endpoint
+
+    def settings(url: str) -> LLMSettings:
+        return LLMSettings(enabled=True, base_url=url, model="m", api_key="k")
+
+    assert (
+        _llm_endpoint(settings("https://api.example.test/v1/chat/completions"))
+        == "https://api.example.test/v1/chat/completions"
+    )
+    assert (
+        _llm_endpoint(settings("https://api.example.test/v1/"))
+        == "https://api.example.test/v1/chat/completions"
+    )
+    assert (
+        _llm_endpoint(settings("https://api.example.test"))
+        == "https://api.example.test/v1/chat/completions"
+    )
+
+
+def test_web_llm_connection_test_reports_success_and_refused(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
+    client = TestClient(create_app())
+    draft = {
+        "provider_name": "openai-compatible",
+        "base_url": "https://api.example.test/v1",
+        "model": "gpt-test",
+        "api_key": "sk-test-secret",
+    }
+
+    def ok_urlopen(request: object, timeout: int) -> FakeLLMResponse:
+        assert request.full_url == "https://api.example.test/v1/chat/completions"
+        return FakeLLMResponse({"choices": [{"message": {"content": "pong"}}]})
+
+    monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", ok_urlopen)
+    success = client.post("/api/settings/llm/test", json=draft).json()
+    assert success["ok"] is True
+    assert success["endpoint"] == "https://api.example.test/v1/chat/completions"
+
+    from urllib.error import URLError
+
+    def refused_urlopen(request: object, timeout: int) -> FakeLLMResponse:
+        raise URLError(ConnectionRefusedError(61, "Connection refused"))
+
+    monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", refused_urlopen)
+    refused = client.post("/api/settings/llm/test", json=draft).json()
+    assert refused["ok"] is False
+    assert "连接被拒绝" in refused["message"]
+
+    missing = client.post("/api/settings/llm/test", json={}).json()
+    assert missing["ok"] is False
+    assert "缺少配置" in missing["message"]
+
+
+def test_llm_endpoint_preserves_query_and_custom_paths() -> None:
+    from dealbuddy.config import LLMSettings
+    from dealbuddy.web import _llm_endpoint
+
+    def endpoint(url: str) -> str:
+        return _llm_endpoint(
+            LLMSettings(enabled=True, base_url=url, model="m", api_key="k")
+        )
+
+    # /v1 结尾带 query：只补 path，query 原样保留
+    assert (
+        endpoint("https://host.test/v1?api-version=1")
+        == "https://host.test/v1/chat/completions?api-version=1"
+    )
+    # 自建网关自定义路径：逐字保留，不被改写
+    assert endpoint("https://gw.test/llm") == "https://gw.test/llm"
+    # 完整端点：保持不变
+    assert (
+        endpoint("https://host.test/v1/chat/completions")
+        == "https://host.test/v1/chat/completions"
+    )
+
+
+def test_llm_connection_test_rejects_untrusted_origin(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
+    client = TestClient(create_app())
+    response = client.post(
+        "/api/settings/llm/test",
+        headers={"Origin": "https://detail.tmall.com"},
+        json={
+            "base_url": "http://attacker.example",
+            "model": "gpt",
+            "api_key": "sk-x",
+        },
+    )
+    assert response.status_code == 403
+
+
+def test_offer_not_lost_when_posted_during_background_summary(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    import threading
+
+    monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
+    started = threading.Event()
+    release = threading.Event()
+
+    def fake_urlopen(request: object, timeout: int) -> FakeLLMResponse:
+        started.set()
+        release.wait(timeout=5)
+        return FakeLLMResponse(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "summaries": [
+                                        {
+                                            "url": "https://item.jd.com/A.html",
+                                            "summary": "A 短评",
+                                        },
+                                        {
+                                            "url": "https://item.jd.com/B.html",
+                                            "summary": "B 短评",
+                                        },
+                                    ]
+                                },
+                                ensure_ascii=False,
+                            )
+                        }
+                    }
+                ]
+            }
+        )
+
+    monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", fake_urlopen)
+    client = TestClient(create_app())
+    session_id = client.post(
+        "/api/sessions",
+        json={"category": "扫地机器人", "request": "预算4000"},
+    ).json()["session"]["session_id"]
+    client.post(
+        "/api/settings/llm",
+        json={
+            "enabled": True,
+            "provider_name": "openai-compatible",
+            "base_url": "https://api.example.test/v1",
+            "model": "gpt-test",
+            "api_key": "sk-test",
+        },
+    )
+
+    # 采集 A -> 后台摘要线程启动并阻塞在 LLM 调用
+    client.post(
+        "/api/current/offers",
+        json=sample_payload(url="https://item.jd.com/A.html", platform="jd", title="A"),
+    )
+    assert started.wait(timeout=5)
+
+    # LLM 仍在进行中，采集 B（前台保存 A+B）
+    posted_b = client.post(
+        "/api/current/offers",
+        json=sample_payload(url="https://item.jd.com/B.html", platform="jd", title="B"),
+    )
+    assert posted_b.json()["verified_count"] == 2
+
+    # 放行后台线程完成写回，等待其落盘
+    release.set()
+    deadline = __import__("time").monotonic() + 5
+    while __import__("time").monotonic() < deadline:
+        offers = client.get(f"/api/sessions/{session_id}").json()["session"][
+            "verified_offers"
+        ]
+        if all(o.get("llm_summary") for o in offers) and len(offers) == 2:
+            break
+        __import__("time").sleep(0.05)
+
+    session = client.get(f"/api/sessions/{session_id}").json()["session"]
+    titles = sorted(o["title"] for o in session["verified_offers"])
+    # 旧实现下 A 的后台线程会用只含 A 的陈旧快照覆盖，B 会丢失 -> 断言 B 仍在
+    assert titles == ["A", "B"]
+    assert all(o.get("llm_summary") for o in session["verified_offers"])
+
+
+def test_two_phase_capture_reposts_same_url_and_updates_in_place(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    # 扩展先送达基础商品（无 OCR），OCR 完成后带 ocr_text 再次 POST 同一 URL。
+    monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
+    client = TestClient(create_app())
+    session_id = client.post(
+        "/api/sessions",
+        json={"category": "扫地机器人", "request": "预算4000"},
+    ).json()["session"]["session_id"]
+
+    base = sample_payload(url="https://item.jd.com/x.html", platform="jd", title="X")
+    base.pop("ocr_text", None)
+    first = client.post("/api/current/offers", json=base)
+    assert first.json()["verified_count"] == 1
+
+    enriched = dict(base, ocr_text="36000Pa 自动集尘 全年免维护")
+    second = client.post("/api/current/offers", json=enriched)
+    assert second.json()["verified_count"] == 1  # 同 URL 覆盖，不新增
+
+    session = client.get(f"/api/sessions/{session_id}").json()["session"]
+    assert len(session["verified_offers"]) == 1
+    assert session["verified_offers"][0]["parameters"]["ocr_text"].startswith("36000Pa")

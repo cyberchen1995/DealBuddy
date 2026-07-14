@@ -66,7 +66,7 @@ uv run dealbuddy web --port 8765
 2. 启用“开发者模式”。
 3. 选择“加载已解压的扩展程序”并指向 `extension/dealbuddy-capture/`。
 
-扩展会等待详情图加载，并在本地隐藏 iframe 中运行 OCR 来补全图片里的规格文本。OCR 在浏览器本地执行，图片不会上传到 DealBuddy 服务之外。
+扩展采用两阶段投递：先把页面可见字段（标题、价格、SKU）送到工作台，几秒内即可在商品列表看到；随后在本地隐藏 iframe 中运行 OCR 补全详情图里的规格文本，识别完成后按同一链接覆盖更新同一条商品。OCR 在浏览器本地执行，图片不会上传到 DealBuddy 服务之外。
 
 ## 可选 LLM Provider
 

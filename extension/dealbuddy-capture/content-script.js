@@ -1470,25 +1470,37 @@
           options.detailLoadTimeoutMs || captureSettings.detailLoadTimeoutMs,
         onStatus: updateStatus,
       });
-      updateStatus("OCR 初始化...");
+      const intakeUrl = options.intakeUrl || captureSettings.intakeUrl;
+      lastCapturePayload = payload;
+      // 阶段 1：先把商品送达工作台（不等 OCR），用户几秒内即可见；后端按 URL 覆盖更新。
+      let delivered = false;
+      try {
+        const firstResult = await postCapturePayload(payload, intakeUrl);
+        delivered = true;
+        updateStatus(
+          `商品已送达工作台（共 ${firstResult.verified_count} 个），正在本地识别详情图...`
+        );
+      } catch (_error) {
+        updateStatus("发送到本机失败，仍在本地识别详情图...");
+      }
+      // 阶段 2：本地 OCR（较慢），完成后带文字再次送达同一商品。
       const mergedPayload = await ocrPayload(payload, (progress) => {
         updateStatus(progress.message || "OCR 中...");
       });
       lastCapturePayload = mergedPayload;
-      updateStatus("正在发送到本机 DealBuddy...");
+      updateStatus("详情图识别完成，正在更新工作台...");
       try {
-        const intakeResult = await postCapturePayload(
-          mergedPayload,
-          options.intakeUrl || captureSettings.intakeUrl
-        );
+        const intakeResult = await postCapturePayload(mergedPayload, intakeUrl);
         setCaptureStatus(
           "completed",
-          `整理完成，已发送到本机 DealBuddy（已采集 ${intakeResult.verified_count} 个）。`
+          `整理完成，详情已更新（共 ${intakeResult.verified_count} 个）。`
         );
       } catch (error) {
         setCaptureStatus(
-          "failed",
-          "整理完成，但发送到本机 DealBuddy 失败，可在 popup 中复制 JSON。",
+          delivered ? "completed" : "failed",
+          delivered
+            ? "商品已在工作台，但详情文字更新发送失败，可在 popup 复制 JSON。"
+            : "整理完成，但发送到本机 DealBuddy 失败，可在 popup 中复制 JSON。",
           error instanceof Error ? error.message : String(error)
         );
       }
@@ -1497,9 +1509,14 @@
       if (payload) {
         const failedPayload = mergeOcrFailure(payload, error);
         lastCapturePayload = failedPayload;
+        // 阶段 1 已把基础商品送达，这里尽力把 OCR 失败标记也同步过去（按 URL 覆盖）。
+        void postCapturePayload(
+          failedPayload,
+          options.intakeUrl || captureSettings.intakeUrl
+        ).catch(() => {});
         setCaptureStatus(
           "failed",
-          "页面字段已整理，但 OCR 失败，可在 popup 中复制已有 JSON。",
+          "页面字段已整理并送达，但 OCR 失败，可在 popup 中复制 JSON。",
           error instanceof Error ? error.message : String(error)
         );
         return failedPayload;

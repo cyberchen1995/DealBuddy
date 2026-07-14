@@ -1,6 +1,6 @@
 [project]
 name = "dealbuddy"
-version = "0.2.0"
+version = "0.3.0"
 description = "Local-first shopping research: manual browser capture + local web workbench with optional LLM and MCP"
 readme = "README.md"
 requires-python = ">=3.12"

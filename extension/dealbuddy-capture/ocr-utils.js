@@ -16,6 +16,9 @@
     "tps-56-56.gif",
     "placeholder",
   ];
+  // 动图（.gif）几乎都是演示动画而非规格表，OCR 只能读到第 0 帧、价值低，
+  // 跳过它们可减少识别张数、加快本地 OCR，而不丢真正的参数文字。
+  const ANIMATED_IMAGE_PATTERN = /\.gif(?:[?#]|$)/i;
 
   function normalizeWhitespace(value) {
     return String(value || "")
@@ -35,6 +38,10 @@
     return !PLACEHOLDER_MARKERS.some((marker) => lowered.includes(marker));
   }
 
+  function isOcrCandidate(url) {
+    return isRealImageUrl(url) && !ANIMATED_IMAGE_PATTERN.test(url);
+  }
+
   function pickOcrImageUrls(payload, limit = DEFAULT_OCR_IMAGE_LIMIT) {
     const maxItems = Number.isFinite(limit)
       ? Math.max(Math.floor(limit), 0)
@@ -43,7 +50,7 @@
     const urls = [];
     for (const value of payload?.detail_image_urls || []) {
       const url = normalizeWhitespace(value);
-      if (!isRealImageUrl(url) || seen.has(url)) {
+      if (!isOcrCandidate(url) || seen.has(url)) {
         continue;
       }
       seen.add(url);

@@ -10,45 +10,46 @@
     <link rel="icon" href="data:," />
     <title>DealBuddy 工作台</title>
     <style>
+      /* Data-Dense Dashboard：蓝色数据主色 + 琥珀高亮，冷灰蓝中性色 */
       :root {
         color-scheme: light;
-        --bg: #f3f5f1;
-        --surface: #fbfcf8;
-        --surface-soft: #eef2ec;
-        --surface-raised: #f7f9f4;
-        --line: #d8ded3;
-        --line-strong: #c4cdbf;
-        --text: #1d241f;
-        --muted: #657267;
-        --muted-strong: #47554a;
-        --accent: #2f6f56;
-        --accent-strong: #244f3f;
-        --accent-soft: #dfeee6;
-        --warn: #865b12;
-        --danger: #a5443d;
-        --danger-soft: #f5e4e1;
-        --shadow: rgba(29, 36, 31, 0.08);
+        --bg: #f5f7fb;
+        --surface: #ffffff;
+        --surface-soft: #eff3f9;
+        --surface-raised: #fafbfe;
+        --line: #e1e7f0;
+        --line-strong: #c9d4e4;
+        --text: #0f172a;
+        --muted: #64748b;
+        --muted-strong: #46556c;
+        --accent: #1e40af;
+        --accent-strong: #1e3a8a;
+        --accent-soft: #e1eafd;
+        --warn: #b45309;
+        --danger: #dc2626;
+        --danger-soft: #fbe9e9;
+        --shadow: rgba(15, 23, 42, 0.06);
       }
 
       @media (prefers-color-scheme: dark) {
         :root {
           color-scheme: dark;
-          --bg: #0f1210;
-          --surface: #151a16;
-          --surface-soft: #1b211c;
-          --surface-raised: #171d18;
-          --line: rgba(199, 218, 201, 0.14);
-          --line-strong: rgba(199, 218, 201, 0.24);
-          --text: #eff4ee;
-          --muted: #9aa69d;
-          --muted-strong: #c4cec6;
-          --accent: #8fcfb0;
-          --accent-strong: #b0dec6;
-          --accent-soft: rgba(143, 207, 176, 0.13);
-          --warn: #efbd6f;
-          --danger: #ff9b91;
-          --danger-soft: rgba(255, 155, 145, 0.13);
-          --shadow: rgba(3, 7, 4, 0.32);
+          --bg: #0b1120;
+          --surface: #111a2c;
+          --surface-soft: #17223a;
+          --surface-raised: #131e33;
+          --line: rgba(148, 178, 224, 0.16);
+          --line-strong: rgba(148, 178, 224, 0.28);
+          --text: #e6edf7;
+          --muted: #8da0bc;
+          --muted-strong: #b9c7dd;
+          --accent: #7da5f5;
+          --accent-strong: #a8c3f9;
+          --accent-soft: rgba(96, 143, 245, 0.16);
+          --warn: #f0b35c;
+          --danger: #f79289;
+          --danger-soft: rgba(247, 146, 137, 0.14);
+          --shadow: rgba(2, 6, 16, 0.4);
         }
       }
 
@@ -64,7 +65,7 @@
         min-height: 100dvh;
         margin: 0;
         background:
-          linear-gradient(180deg, rgba(47, 111, 86, 0.06), transparent 240px),
+          linear-gradient(180deg, rgba(30, 64, 175, 0.05), transparent 240px),
           var(--bg);
         color: var(--text);
         font-family:
@@ -72,6 +73,9 @@
           system-ui,
           -apple-system,
           BlinkMacSystemFont,
+          "PingFang SC",
+          "Hiragino Sans GB",
+          "Microsoft YaHei",
           "Segoe UI",
           sans-serif;
         font-size: 14px;
@@ -274,11 +278,13 @@
 
       .status-chip {
         align-items: center;
+        background: var(--surface);
         border: 1px solid var(--line);
         border-radius: 8px;
         color: var(--muted-strong);
         display: inline-flex;
         font-size: 12px;
+        font-variant-numeric: tabular-nums;
         font-weight: 650;
         min-height: 30px;
         padding: 5px 9px;
@@ -306,7 +312,7 @@
         background: var(--surface);
         border: 1px solid var(--line);
         border-radius: 8px;
-        box-shadow: 0 10px 32px var(--shadow);
+        box-shadow: 0 1px 3px var(--shadow);
         min-width: 0;
         overflow: hidden;
       }
@@ -758,6 +764,7 @@
         border-radius: 8px;
         color: var(--muted-strong);
         font-size: 12px;
+        font-variant-numeric: tabular-nums;
         font-weight: 650;
         max-width: 100%;
         overflow: hidden;
@@ -766,9 +773,11 @@
         white-space: nowrap;
       }
 
+      /* 价格是最关键数据点：琥珀高亮，区别于蓝色结构色 */
       .meta-pill.price {
-        border-color: color-mix(in srgb, var(--accent) 35%, var(--line));
-        color: var(--accent-strong);
+        border-color: color-mix(in srgb, var(--warn) 45%, var(--line));
+        color: var(--warn);
+        font-weight: 750;
       }
 
       .offer-body {
@@ -809,6 +818,7 @@
 
       .detail-value {
         color: var(--text);
+        font-variant-numeric: tabular-nums;
         overflow-wrap: anywhere;
       }
 
@@ -1033,7 +1043,11 @@
                   />
                 </div>
               </div>
+              <p class="notice" id="llm-test-result"></p>
               <div class="form-actions">
+                <button class="secondary" id="llm-test-button" type="button">
+                  测试连接
+                </button>
                 <button type="submit">保存设置</button>
               </div>
             </form>
@@ -1199,13 +1213,21 @@
       }
 
       async function api(path, options = {}) {
-        const response = await fetch(path, {
-          ...options,
-          headers: {
-            "Content-Type": "application/json",
-            ...(options.headers || {}),
-          },
-        });
+        let response;
+        try {
+          response = await fetch(path, {
+            ...options,
+            headers: {
+              "Content-Type": "application/json",
+              ...(options.headers || {}),
+            },
+          });
+        } catch (error) {
+          throw new Error(
+            "无法连接本机 DealBuddy 服务：请确认 `uv run dealbuddy web` 正在运行，" +
+              `且页面端口与服务一致（${error.message}）`
+          );
+        }
         if (!response.ok) {
           throw new Error(await response.text());
         }
@@ -1747,6 +1769,34 @@
         } finally {
           state.chatStreaming = false;
           updateChatSubmit();
+        }
+      });
+
+      $("llm-test-button").addEventListener("click", async () => {
+        const result = $("llm-test-result");
+        const button = $("llm-test-button");
+        button.disabled = true;
+        result.className = "notice";
+        result.textContent = "正在测试连接…";
+        try {
+          const payload = await api("/api/settings/llm/test", {
+            method: "POST",
+            body: JSON.stringify({
+              provider_name: $("llm-provider").value,
+              base_url: $("llm-base-url").value,
+              model: $("llm-model").value,
+              api_key: $("llm-api-key").value,
+            }),
+          });
+          result.className = payload.ok ? "notice" : "notice error";
+          result.textContent = payload.endpoint
+            ? `${payload.message}（${payload.endpoint}）`
+            : payload.message;
+        } catch (error) {
+          result.className = "notice error";
+          result.textContent = String(error.message || error);
+        } finally {
+          button.disabled = false;
         }
       });
 
