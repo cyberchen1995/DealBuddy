@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DealBuddy 购物搭子 — 把商品页整理成带证据的选品报告</title>
-  <meta name="description" content="DealBuddy 购物搭子：Chrome 采集扩展 + 本地 Web 工作台 + Agent Skill。把淘宝、天猫、京东商品页上看得见的事实，整理成带出处、带时间戳的 Markdown 选品报告。本地优先，默认纯本地分析。">
-  <meta property="og:title" content="DealBuddy 购物搭子 — 把商品页整理成带证据的选品报告">
-  <meta property="og:description" content="本地优先的购物研究三件套：采集扩展、本地工作台、Agent Skill。每个数字有出处，每条记录带时间戳。">
+  <title>DealBuddy 购物搭子 | 本地购物研究工具</title>
+  <meta name="description" content="整理淘宝、天猫、京东商品详情页的页面可见信息，生成本地 Markdown 选品报告。Chrome 扩展 + 本地工作台 + MCP。v0.3.0，MIT 开源。">
+  <meta property="og:title" content="DealBuddy 购物搭子">
+  <meta property="og:description" content="本地购物研究工具。整理淘宝、天猫、京东商品详情页的可见信息，生成选品报告。开源 MIT，v0.3.0。">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://cyberchen1995.github.io/DealBuddy/">
   <meta property="og:image" content="https://cyberchen1995.github.io/DealBuddy/assets/img/workbench-1280x800.png">
@@ -19,346 +19,283 @@
 <body>
 <a class="skip-link" href="#main">跳到正文</a>
 
-<header class="nav" id="top">
+<header class="nav">
   <div class="nav-inner">
     <a class="brand" href="#top" aria-label="DealBuddy 购物搭子，回到页首">
       <img src="assets/brand/dealbuddy-mark.svg" alt="" width="30" height="30">
       <span class="brand-name">DealBuddy<em>购物搭子</em></span>
     </a>
     <nav class="nav-links" aria-label="页内导航">
-      <a href="#suite">三件套</a>
-      <a href="#how">怎么用</a>
-      <a href="#report">报告样张</a>
-      <a href="#promise">底线</a>
-      <a href="#faq">常见疑问</a>
+      <a href="#components">组成</a>
+      <a href="#report">报告</a>
+      <a href="#install">安装</a>
+      <a href="#data">数据边界</a>
+      <a href="https://github.com/cyberchen1995/DealBuddy">GitHub</a>
     </nav>
     <div class="nav-actions">
       <a class="nav-github" href="https://github.com/cyberchen1995/DealBuddy" aria-label="GitHub 仓库">
         <svg viewBox="0 0 16 16" width="19" height="19" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
       </a>
-      <a class="btn btn-primary btn-sm" href="https://github.com/cyberchen1995/DealBuddy/releases/download/v0.3.0/dealbuddy-capture-0.3.0.zip">
-        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
-        下载 v0.3.0
-      </a>
+      <a class="btn btn-primary btn-sm" href="https://github.com/cyberchen1995/DealBuddy/releases/download/v0.3.0/dealbuddy-capture-0.3.0.zip">下载 v0.3.0</a>
     </div>
   </div>
 </header>
 
 <main id="main">
+  <div class="doc">
 
-  <!-- ============ HERO ============ -->
-  <section class="hero">
-    <div class="wrap hero-grid">
-      <div class="hero-copy reveal">
-        <p class="eyebrow"><span class="eyebrow-dot" aria-hidden="true"></span>本地优先的购物研究三件套 · 开源 MIT</p>
-        <h1>买大件之前，<br>先把<mark>证据</mark>摆上桌。</h1>
-        <p class="lede">
-          DealBuddy 购物搭子跑在你自己的电脑上：Chrome 扩展把淘宝、天猫、京东商品页上
-          <strong>看得见的事实</strong>——页面展示价、SKU、店铺、规格、详情图文字——收进本地工作台，
-          整理成带出处、带时间戳的 Markdown 选品报告。分析默认纯本地完成，想追问再接入你选的 LLM。
-        </p>
-        <div class="cta-row">
-          <a class="btn btn-primary" href="https://github.com/cyberchen1995/DealBuddy/releases/download/v0.3.0/dealbuddy-capture-0.3.0.zip">
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
-            下载采集扩展 v0.3.0
-          </a>
-          <a class="btn btn-ghost" href="https://github.com/cyberchen1995/DealBuddy">
-            GitHub 看源码
-            <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M8 7h9v9"/></svg>
-          </a>
-        </div>
-        <ul class="assure" aria-label="基本事实">
-          <li><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>数据存在本机目录</li>
-          <li><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>不需要注册账号</li>
-          <li><svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m5 13 4 4L19 7"/></svg>默认纯本地分析</li>
-        </ul>
+    <!-- 文档头 -->
+    <section class="doc-head reveal" id="top">
+      <h1>DealBuddy 购物搭子</h1>
+      <p class="tagline">本地购物研究工具。整理淘宝、天猫、京东商品详情页的可见信息，生成选品报告。</p>
+      <p class="meta-line" aria-label="版本与环境">
+        <span>v0.3.0</span><span>MIT</span><span>Python &gt;=3.12 + uv</span><span>仅商品详情页</span>
+      </p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://github.com/cyberchen1995/DealBuddy/releases/download/v0.3.0/dealbuddy-capture-0.3.0.zip">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+          下载 dealbuddy-capture-0.3.0.zip
+        </a>
+        <a class="btn btn-ghost" href="https://github.com/cyberchen1995/DealBuddy">GitHub</a>
       </div>
-      <figure class="hero-shot reveal" data-d="1">
-        <div class="shot-frame">
-          <span class="tape tape-l" aria-hidden="true"></span>
-          <span class="tape tape-r" aria-hidden="true"></span>
-          <img src="assets/img/workbench-1280x800.png" alt="DealBuddy 本地工作台界面：左侧会话列表，中间选品报告与价格说明，右侧商品列表与琥珀色价签。" width="1280" height="800" fetchpriority="high">
-          <span class="stamp" aria-hidden="true"><b>本地运行</b><i>local · first</i></span>
-        </div>
-        <figcaption>图：本地工作台 —— 会话、报告、商品列表，全部在 <code>127.0.0.1:8765</code></figcaption>
-      </figure>
-    </div>
-  </section>
+      <p class="cta-note">约 19 MB，从 GitHub Releases 分发。</p>
+    </section>
 
-  <!-- ============ 01 三件套 ============ -->
-  <section class="section" id="suite">
-    <div class="wrap">
-      <div class="chapter reveal"><span class="chapter-no">01</span><span class="chapter-rule" aria-hidden="true"></span><span class="chapter-tag">三件套</span></div>
-      <h2 class="reveal">一套三件，各管一段。</h2>
-      <p class="section-lede reveal">不是一个大而全的 App，而是三个各司其职的小件，装完都归你。</p>
-      <div class="suite-grid">
-        <article class="suite-item reveal" data-d="0">
-          <div class="suite-head">
-            <span class="suite-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 7h4a1 1 0 0 1 1 1v3.5a2.5 2.5 0 0 1 0 5V20a1 1 0 0 1-1 1h-3.5a2.5 2.5 0 0 0-5 0H6a1 1 0 0 1-1-1v-4a2.5 2.5 0 0 1 0-5V8a1 1 0 0 1 1-1h3.5a2.5 2.5 0 0 1 4.5-1.5V7Z"/></svg>
-            </span>
-            <i class="suite-en">Capture</i>
-          </div>
-          <h3>Chrome 采集扩展</h3>
-          <p>你打开商品页，点一下「整理当前商品信息」，标题、页面价、SKU、店铺、规格和详情图文字就成了一条带采集时间的记录。</p>
-          <p class="suite-line"><span>边界</span>只处理你正打开的页面，OCR 在浏览器本地跑。</p>
-        </article>
-        <article class="suite-item reveal" data-d="1">
-          <div class="suite-head">
-            <span class="suite-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2"/><path d="M3 9h18"/><path d="M8 21h8"/><path d="M12 18v3"/></svg>
-            </span>
-            <i class="suite-en">Workbench</i>
-          </div>
-          <h3>本地 Web 工作台</h3>
-          <p>一个只监听 <code>127.0.0.1</code> 的小服务：会话、商品事实表、报告、追问区都在这里，数据落在本机 <code>~/.dealbuddy</code>。</p>
-          <p class="suite-line"><span>边界</span>不连外部服务；LLM 是可选项，配了才启用。</p>
-        </article>
-        <article class="suite-item reveal" data-d="2">
-          <div class="suite-head">
-            <span class="suite-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3"/><rect x="5" y="6" width="14" height="12" rx="3"/><path d="M9 11v2"/><path d="M15 11v2"/><path d="M2 12h3"/><path d="M19 12h3"/></svg>
-            </span>
-            <i class="suite-en">Agent Skill</i>
-          </div>
-          <h3>Agent Skill + MCP</h3>
-          <p>本地 MCP endpoint 加上 <code>skills/dealbuddy</code> 集成材料，让 Codex 等支持 MCP 的 agent 直接调用你的选品会话继续研究。</p>
-          <p class="suite-line"><span>边界</span>MCP 只接受 localhost 来源的请求。</p>
-        </article>
-      </div>
-    </div>
-  </section>
+    <!-- 简介 -->
+    <section class="doc-section reveal" id="intro" data-folio="简介">
+      <h2>简介</h2>
+      <p>DealBuddy 购物搭子由 Chrome 采集扩展、本地 Web 工作台和 Agent Skill（MCP）组成。扩展在淘宝、天猫、京东的商品详情页上工作，把页面可见的商品信息整理成结构化数据：标题、页面价格、SKU、店铺、规格参数、详情图文字。详情图文字通过浏览器本地 OCR 提取，图片不上传。数据发到本机工作台后，工作台生成 Markdown 选品报告，可以继续追问。</p>
+      <p>LLM 是可选的。在工作台设置里配置 Provider 后才启用，默认用本地规则分析。</p>
+      <p>以下事项不在产品功能范围内：</p>
+      <ul class="plain-list">
+        <li>接入购物平台 API</li>
+        <li>导出用户 Cookie</li>
+        <li>绕过验证码</li>
+        <li>进入购物车、结算、订单或支付页面</li>
+      </ul>
+      <p>扩展只处理用户当前打开的页面。可以开启自动整理，但仍只作用于当前页，随时可关。</p>
 
-  <!-- ============ 02 怎么用 ============ -->
-  <section class="section section-alt" id="how">
-    <div class="wrap">
-      <div class="chapter reveal"><span class="chapter-no">02</span><span class="chapter-rule" aria-hidden="true"></span><span class="chapter-tag">怎么用</span></div>
-      <h2 class="reveal">照常逛店，顺手存证，回来看报告。</h2>
-      <p class="section-lede reveal">全程不改变你逛店的方式——DealBuddy 只负责把你看过的页面变成可比较的事实。</p>
-      <ol class="acts">
-        <li class="act reveal">
-          <span class="act-no" aria-hidden="true">第一幕</span>
-          <div class="act-body">
-            <h3>照常逛店</h3>
-            <p>在淘宝、天猫、京东打开候选商品页。找货这件事还是你来——DealBuddy 不代逛、不代点，也不替你做决定。</p>
-          </div>
-          <span class="act-glyph" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          </span>
-        </li>
-        <li class="act reveal" data-d="1">
-          <span class="act-no" aria-hidden="true">第二幕</span>
-          <div class="act-body">
-            <h3>顺手存证</h3>
-            <p>点一下扩展里的「整理当前商品信息」：可见字段几秒钟进工作台，详情长图里的规格文字由本地 OCR 随后补全——图片不出你的浏览器。</p>
-          </div>
-          <span class="act-glyph" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
-          </span>
-        </li>
-        <li class="act reveal" data-d="2">
-          <span class="act-no" aria-hidden="true">第三幕</span>
-          <div class="act-body">
-            <h3>出报告，再追问</h3>
-            <p>工作台把候选商品并排成事实表，生成 Markdown 选品报告；想深挖就在追问区继续。默认用本地规则回答，接不接 LLM 由你决定。</p>
-          </div>
-          <span class="act-glyph" aria-hidden="true">
-            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8"/><path d="M8 17h5"/></svg>
-          </span>
-        </li>
-      </ol>
-      <p class="mini-cta reveal"><a href="#install">直接看安装步骤 ↓</a></p>
-    </div>
-  </section>
+      <nav class="toc" aria-label="目录">
+        <span class="toc-label">目录</span>
+        <ol>
+          <li><a href="#intro">简介</a></li>
+          <li><a href="#components">组成</a></li>
+          <li><a href="#report">报告</a></li>
+          <li><a href="#install">安装</a></li>
+          <li><a href="#data">数据边界</a></li>
+          <li><a href="#faq">常见问题</a></li>
+        </ol>
+      </nav>
+    </section>
 
-  <!-- ============ 03 报告样张 ============ -->
-  <section class="section" id="report">
-    <div class="wrap">
-      <div class="panel reveal">
-        <div class="panel-grid">
-          <div class="panel-copy">
-            <div class="chapter chapter-dark"><span class="chapter-no">03</span><span class="chapter-rule" aria-hidden="true"></span><span class="chapter-tag">报告样张</span></div>
-            <h2>每个结论，<br>都能倒查。</h2>
-            <ul class="notes">
-              <li>
-                <span class="note-mark" aria-hidden="true"></span>
-                <p><strong>价格分层写。</strong>划线价、页面展示价、页面可见优惠、估算应付各归各位；「估算应付」只计入页面能直接解析的优惠，不冒充结算价格。</p>
-              </li>
-              <li>
-                <span class="note-mark" aria-hidden="true"></span>
-                <p><strong>记录带出处。</strong>每条商品都保留来源链接、SKU、采集与复核时间、数据可信度，报告是可追溯的事实摘要，不是拍脑袋的结论。</p>
-              </li>
-              <li>
-                <span class="note-mark" aria-hidden="true"></span>
-                <p><strong>纯 Markdown。</strong>复制进笔记、聊天窗口或另一个 agent 都不失真，证据跟着结论一起走。</p>
-              </li>
-            </ul>
+    <!-- 组成 -->
+    <section class="doc-section reveal" id="components" data-folio="组成">
+      <h2>组成</h2>
+      <p>数据从商品页流向扩展，扩展发到工作台，工作台生成报告。MCP 是给 Agent 用的接口。</p>
+      <p class="flow" aria-label="数据流向">
+        <span>商品页</span><i aria-hidden="true">→</i><span>扩展</span><i aria-hidden="true">→</i><span>工作台</span><i aria-hidden="true">→</i><span>报告 / MCP</span>
+      </p>
+
+      <article class="component">
+        <h3>Chrome 采集扩展</h3>
+        <dl class="io">
+          <dt>输入</dt>
+          <dd>用户当前打开的淘宝、天猫或京东商品详情页。</dd>
+        </dl>
+        <p>扩展分两个阶段投递。第一阶段把页面可见字段（标题、价格、SKU、店铺、规格文字）发到工作台，几秒内可在商品列表看到。第二阶段在浏览器本地隐藏 iframe 中对详情长图执行 OCR，识别完成后覆盖更新同一条商品。</p>
+        <dl class="io">
+          <dt>输出</dt>
+          <dd>结构化商品 JSON，发送到 <code>http://127.0.0.1:8765/api/current/offers</code>。</dd>
+        </dl>
+        <p>扩展弹窗有三个按钮：<span class="ui-str">整理当前商品信息</span><span class="ui-str">复制 JSON</span><span class="ui-str">重新整理</span>。进度提示依次为「正在整理页面字段...」和「商品已送达工作台（共 N 个），正在本地识别详情图...」。</p>
+        <dl class="io">
+          <dt>边界</dt>
+          <dd>只处理用户当前打开的页面。OCR 在浏览器本地执行，图片不上传到 DealBuddy 服务之外。</dd>
+        </dl>
+      </article>
+
+      <article class="component">
+        <h3>本地 Web 工作台</h3>
+        <dl class="io">
+          <dt>输入</dt>
+          <dd>扩展投递的商品数据。</dd>
+        </dl>
+        <p>工作台是一个只监听 <code>127.0.0.1</code> 的本地服务。包含会话管理、商品列表、选品报告和追问区。默认分析使用本地规则。工作台提示语为「默认仅本地分析。开启后只有追问会调用外部 Provider。」。</p>
+        <p>会话列表空状态：「还没有会话」。商品列表空状态：「等待商品投递」。</p>
+        <figure class="doc-fig">
+          <div class="fig-frame">
+            <img src="assets/img/workbench-1280x800.png" alt="DealBuddy 本地工作台界面。左侧会话列表，中间选品报告与追问区，右侧商品列表。" width="1280" height="800" loading="lazy">
+            <span class="stamp" aria-hidden="true"><b>本地运行</b><i>127.0.0.1</i></span>
           </div>
-          <div class="report-card" role="img" aria-label="Markdown 选品报告示意：包含价格说明、核心结论与带时间戳的商品记录">
-            <div class="report-bar" aria-hidden="true"><i></i><i></i><i></i><span>report-电视.md</span></div>
-            <div class="report-body" aria-hidden="true">
-<pre><code><span class="md-h"># DealBuddy 选品报告：电视</span>
-<span class="md-meta">需求版本: v3 · 生成时间: 2026-06-18</span>
+          <figcaption>本地 Web 工作台。左：会话；中：报告与追问；右：商品列表。</figcaption>
+        </figure>
+        <dl class="io">
+          <dt>输出</dt>
+          <dd>Markdown 选品报告，含价格字段、匹配评分和采集时间。</dd>
+        </dl>
+        <dl class="io">
+          <dt>边界</dt>
+          <dd>无账号体系。会话数据存 <code>~/.dealbuddy/sessions</code>，配置存 <code>~/.dealbuddy/config.json</code>。</dd>
+        </dl>
+      </article>
 
-<span class="md-q">&gt; 价格说明：「页面展示价」与「估算应付」仅基于
-&gt; 商品页面可见信息估算，不代表最终结算价格，
-&gt; 具体成交价以订单结算页为准。</span>
+      <article class="component">
+        <h3>Agent Skill（MCP）</h3>
+        <p>工作台同时提供本地 MCP endpoint：</p>
+        <pre class="code"><code>POST http://127.0.0.1:8765/mcp</code></pre>
+        <p>共 8 个工具：<code>create_session</code>、<code>list_sessions</code>、<code>show_session</code>、<code>set_current_session</code>、<code>add_offer</code>、<code>refine_requirements</code>、<code>get_report</code>、<code>ask_session</code>。</p>
+        <p>请求校验 <code>Origin</code>，只接受 localhost 来源。<code>skills/dealbuddy</code> 是 Agent Skill 集成材料。</p>
+      </article>
+    </section>
 
-<span class="md-h2">## 最符合需求</span>
-<span class="md-li">- 商品：Vidda海信电视 R55 55英寸144Hz高刷</span>
-<span class="md-li">- 平台：tmall · 店铺：海信官方旗舰店</span>
-<span class="md-li">- SKU：55英寸 / 55V1KD-R黑色 / 官方标配</span>
-<span class="md-li">- <span class="md-k">页面展示价</span>：¥1274.15 · <span class="md-k">估算应付</span>：¥1274.15</span>
-<span class="md-li">- 优劣短评：144Hz 高刷达标，HDR 规格待核实</span>
-<span class="md-li">- <span class="md-k">复核时间</span>：2026-06-17T15:46:15+00:00</span>
-<span class="md-li">- <span class="md-k">数据可信度</span>：high</span>
+    <!-- 报告 -->
+    <section class="doc-section reveal" id="report" data-folio="报告">
+      <h2>报告</h2>
+      <p>报告基于已采集商品生成，分为以下章节：最符合需求、最低预算、综合性价比、值得加预算、不推荐项。追问后报告末尾追加「追问记录」章节。</p>
 
-<span class="md-h2">## 仍缺的信息</span>
-<span class="md-li">- 详情页未标注 HDR10+ 支持情况，建议追问</span></code></pre>
+      <figure class="doc-fig specimen-fig">
+        <div class="specimen" role="group" aria-label="选品报告样张，含四条可查看说明的字段行">
+          <div class="specimen-tab" aria-hidden="true"><span>report-电视.md</span></div>
+          <div class="specimen-body">
+            <p class="r-line r-h" aria-hidden="true"># DealBuddy 选品报告：电视</p>
+            <p class="r-line r-q" aria-hidden="true">&gt; 价格来自页面可见信息。估算应付只计算页面明确<br>&gt; 展示且可直接解析的优惠，不代表结算价格。</p>
+            <p class="r-line r-h2" aria-hidden="true">## 最符合需求</p>
+            <p class="r-line" aria-hidden="true">- 商品：Vidda海信电视 R55 55英寸144Hz高刷 电视机液晶以旧换新补贴65</p>
+            <p class="r-line" aria-hidden="true">- 平台：tmall</p>
+            <p class="r-line" aria-hidden="true">- 店铺：海信官方旗舰店</p>
+            <p class="r-line" aria-hidden="true">- 匹配分：22.44</p>
+            <p class="r-line" aria-hidden="true">- SKU：55英寸 / 55V1KD-R黑色 / 官方标配</p>
+            <div class="r-line r-note-line" tabindex="0">
+              <p>- <span class="r-k">页面展示价</span>：¥1274.15<sup>①</sup></p>
+              <span class="r-note">① 详情页当前展示的价格</span>
+            </div>
+            <div class="r-line r-note-line" tabindex="0">
+              <p>- <span class="r-k">估算应付</span>：¥1274.15<sup>②</sup></p>
+              <span class="r-note">② 据页面可见优惠估算，非结算价</span>
+            </div>
+            <p class="r-line" aria-hidden="true">- 优劣短评：144Hz高刷价低，但缺HDR10+和杜比视界。</p>
+            <div class="r-line r-note-line" tabindex="0">
+              <p>- <span class="r-k">复核时间</span>：2026-06-17T15:49:29+00:00<sup>③</sup></p>
+              <span class="r-note">③ 采集该商品信息的时间</span>
+            </div>
+            <div class="r-line r-note-line" tabindex="0">
+              <p>- <span class="r-k">数据可信度</span>：high<sup>④</sup></p>
+              <span class="r-note">④ 值为 high、medium 或 low</span>
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  </section>
+        <ul class="specimen-footnotes" aria-label="字段说明">
+          <li>① 页面展示价：详情页当前展示的价格</li>
+          <li>② 估算应付：据页面可见优惠估算，非结算价</li>
+          <li>③ 复核时间：采集该商品信息的时间</li>
+          <li>④ 数据可信度：值为 high、medium 或 low</li>
+        </ul>
+        <figcaption>选品报告「最符合需求」章节。数据采集于 2026-06-17，来源为天猫商品详情页。</figcaption>
+      </figure>
 
-  <!-- ============ 04 底线 ============ -->
-  <section class="section" id="promise">
-    <div class="wrap">
-      <div class="chapter reveal"><span class="chapter-no">04</span><span class="chapter-rule" aria-hidden="true"></span><span class="chapter-tag">底线</span></div>
-      <h2 class="reveal">丑话说在前面。</h2>
-      <p class="section-lede reveal">这些「不做」写进了代码，也写在这里。装之前先看清楚，省得装完失望。</p>
-      <div class="promise-grid">
-        <div class="promise-col reveal">
-          <h3 class="promise-title">隐私，四个不做</h3>
-          <ul class="promise-list">
-            <li><b>不接平台 API。</b><span>只读你打开的页面上可见的内容。</span></li>
-            <li><b>不导出 Cookie。</b><span>OCR 下载商品图时也不携带网站 Cookie。</span></li>
-            <li><b>不绕验证码。</b><span>遇到风控就停下，不做任何规避。</span></li>
-            <li><b>不碰下单结算。</b><span>购物车、订单、支付页面一概不进。</span></li>
-          </ul>
-          <p class="promise-extra">另外两件小事：商品图的 OCR 在你的浏览器本地执行，图片不上传；LLM 默认关闭，只有你配置了 provider，追问才会对外发请求，界面会标明当前 provider。</p>
-        </div>
-        <div class="promise-col reveal" data-d="1">
-          <h3 class="promise-title promise-title-amber">价格，三句实话</h3>
-          <ul class="promise-list">
-            <li><b>报告只写「估算应付」。</b><span>不写「到手价」，最终价格以平台订单结算页为准。</span></li>
-            <li><b>不承诺最低价。</b><span>只承诺每个数字有出处、有采集时间。</span></li>
-            <li><b>不抢券、不批量爬。</b><span>只整理你亲自打开的页面，不做自动化批量采集。</span></li>
-          </ul>
-          <p class="promise-extra">完整的数据处理说明都在<a href="privacy/">隐私政策</a>里，一共十条，五分钟能读完。</p>
-        </div>
-      </div>
-    </div>
-  </section>
+      <h3>价格口径</h3>
+      <table class="spec-table">
+        <thead>
+          <tr><th scope="col">字段名</th><th scope="col">含义</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>标价</td><td>划线价或标签价格</td></tr>
+          <tr><td>页面展示价</td><td>商品详情页当前展示的价格</td></tr>
+          <tr><td>可见优惠</td><td>页面上明确显示的优惠信息</td></tr>
+          <tr><td><mark class="mk">估算应付</mark></td><td>根据页面可直接解析的优惠估算的金额</td></tr>
+          <tr><td>优惠条件</td><td>适用前提，如会员、地区、满减、国补或活动期限</td></tr>
+          <tr><td>复核时间</td><td>扩展采集该商品信息的时间</td></tr>
+          <tr><td>数据可信度</td><td>提取数据完整性评估，值为 high、medium 或 low</td></tr>
+        </tbody>
+      </table>
+      <blockquote class="disclaimer">价格来自页面可见信息。估算应付只计算页面明确展示且可直接解析的优惠，不代表结算价格。</blockquote>
+    </section>
 
-  <!-- ============ 05 常见疑问 ============ -->
-  <section class="section section-alt" id="faq">
-    <div class="wrap faq-grid">
-      <div class="faq-head">
-        <div class="chapter reveal"><span class="chapter-no">05</span><span class="chapter-rule" aria-hidden="true"></span><span class="chapter-tag">常见疑问</span></div>
-        <h2 class="reveal">装之前，<br>大概会想问的。</h2>
-        <p class="section-lede reveal">没找到答案就去 <a href="https://github.com/cyberchen1995/DealBuddy/issues">GitHub Issues</a> 提一个。</p>
-      </div>
-      <div class="faq-list reveal" data-d="1">
-        <details>
-          <summary>我的数据到底存在哪？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
-          <p>会话与报告默认保存在本机 <code>~/.dealbuddy/sessions</code>，配置在 <code>~/.dealbuddy/config.json</code>。工作台只监听 <code>127.0.0.1</code>，没有云端、没有账号体系。</p>
-        </details>
-        <details>
-          <summary>必须配置 LLM 才能用吗？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
-          <p>不用。排序、报告、追问默认由本地规则完成。只有你在设置里填了 provider 和 key，追问区才会调用外部模型，并且界面会显示当前 provider。API Key 只写入本机配置文件。</p>
-        </details>
-        <details>
-          <summary>它会不会在后台自动抓数据？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
-          <p>不会。扩展只处理你当前打开的商品详情页：默认需要你点「整理当前商品信息」；也可以为逛店过程开启自动整理，但它同样只作用于你正在看的页面，随时可关，不存在批量爬取。</p>
-        </details>
-        <details>
-          <summary>支持哪些平台？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
-          <p>当前支持淘宝、天猫、京东的商品详情页。工作台里可以把三个平台的商品放进同一个会话并排比较。</p>
-        </details>
-        <details>
-          <summary>安装麻烦吗？要什么环境？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
-          <p>扩展从 GitHub Releases 下载 zip，用 Chrome 开发者模式加载；工作台需要 Python 3.12 和 uv，两条命令启动。完整步骤见<a href="#install">上手三步</a>。目前通过 GitHub Releases 分发。</p>
-        </details>
-      </div>
-    </div>
-  </section>
-
-  <!-- ============ 06 上手 ============ -->
-  <section class="section" id="install">
-    <div class="wrap">
-      <div class="chapter reveal"><span class="chapter-no">06</span><span class="chapter-rule" aria-hidden="true"></span><span class="chapter-tag">上手</span></div>
-      <h2 class="reveal">三步，装完就是你的。</h2>
-      <p class="section-lede reveal">开源 MIT，没有订阅，没有账号。需要本机 Chrome、Python 3.12 与 uv。</p>
+    <!-- 安装 -->
+    <section class="doc-section reveal" id="install" data-folio="安装">
+      <h2>安装</h2>
+      <p>需要 Python &gt;=3.12、uv 和本机 Chrome。</p>
       <ol class="steps">
-        <li class="step reveal">
-          <span class="step-no" aria-hidden="true">1</span>
-          <div>
-            <h3>下载并解压采集扩展</h3>
-            <p>从 GitHub Releases 获取 <code>dealbuddy-capture-0.3.0.zip</code>（约 19&nbsp;MB），解压到任意目录。</p>
-            <a class="btn btn-primary" href="https://github.com/cyberchen1995/DealBuddy/releases/download/v0.3.0/dealbuddy-capture-0.3.0.zip">
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
-              下载 dealbuddy-capture-0.3.0.zip
-            </a>
-          </div>
+        <li>
+          <h3>下载扩展并解压</h3>
+          <p><a href="https://github.com/cyberchen1995/DealBuddy/releases/download/v0.3.0/dealbuddy-capture-0.3.0.zip">下载 dealbuddy-capture-0.3.0.zip</a>（约 19 MB），解压到任意目录。</p>
         </li>
-        <li class="step reveal" data-d="1">
-          <span class="step-no" aria-hidden="true">2</span>
-          <div>
-            <h3>用开发者模式加载扩展</h3>
-            <p>打开 <code>chrome://extensions</code> → 右上角开启「开发者模式」→「加载已解压的扩展程序」→ 选择刚才解压的目录。</p>
-          </div>
+        <li>
+          <h3>加载到 Chrome</h3>
+          <p>打开 <code>chrome://extensions</code>，开启「开发者模式」，点击「加载已解压的扩展程序」，选择解压后的目录。</p>
         </li>
-        <li class="step reveal" data-d="2">
-          <span class="step-no" aria-hidden="true">3</span>
-          <div>
-            <h3>启动本地工作台</h3>
-            <p>克隆仓库，两条命令把工作台跑起来：</p>
-            <pre class="code"><code><span class="sh-p">$</span> git clone https://github.com/cyberchen1995/DealBuddy.git &amp;&amp; cd DealBuddy
-<span class="sh-p">$</span> uv sync &amp;&amp; uv run dealbuddy web --port 8765</code></pre>
-            <p>浏览器打开 <code>http://127.0.0.1:8765</code>，输入品类和需求，开逛。</p>
-          </div>
+        <li>
+          <h3>启动工作台</h3>
+          <pre class="code"><code>git clone https://github.com/cyberchen1995/DealBuddy.git
+cd DealBuddy
+uv sync
+uv run dealbuddy web --port 8765</code></pre>
+          <p>浏览器打开 <code>http://127.0.0.1:8765</code>。</p>
         </li>
       </ol>
-      <div class="final-cta reveal">
-        <p class="final-line">下一件大件，<mark>带着证据</mark>下单。</p>
-        <div class="cta-row cta-center">
-          <a class="btn btn-primary" href="https://github.com/cyberchen1995/DealBuddy/releases/download/v0.3.0/dealbuddy-capture-0.3.0.zip">
-            <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
-            下载采集扩展 v0.3.0
-          </a>
-          <a class="btn btn-ghost" href="https://github.com/cyberchen1995/DealBuddy/releases">全部版本与更新说明</a>
-        </div>
+    </section>
+
+    <!-- 数据边界 -->
+    <section class="doc-section reveal" id="data" data-folio="数据">
+      <h2>数据边界</h2>
+      <ul class="boundary-list">
+        <li>工作台只监听 <code>127.0.0.1</code>，不接受外部网络连接</li>
+        <li>无账号体系，无登录</li>
+        <li>会话数据存 <code>~/.dealbuddy/sessions</code>，配置存 <code>~/.dealbuddy/config.json</code></li>
+        <li>OCR 在浏览器本地隐藏 iframe 中执行，商品图片不上传到 DealBuddy 服务之外</li>
+        <li>LLM 默认关闭。配置 Provider 后，只有追问区的请求会发往外部模型</li>
+        <li>API Key 不出现在 API 响应、日志或仓库文件中，界面只显示脱敏状态</li>
+        <li>扩展不读取购物平台 Cookie</li>
+        <li>MCP endpoint 只接受 localhost 来源</li>
+      </ul>
+      <p><a class="text-link" href="privacy/">查看隐私政策</a></p>
+    </section>
+
+    <!-- 常见问题 -->
+    <section class="doc-section reveal" id="faq" data-folio="FAQ">
+      <h2>常见问题</h2>
+      <div class="faq-list">
+        <details>
+          <summary>支持哪些页面？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+          <p>淘宝、天猫、京东的商品详情页。搜索结果页、活动页、购物车页不在处理范围内。</p>
+        </details>
+        <details>
+          <summary>估算应付是结算价吗？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+          <p>不是。估算应付只计算页面明确展示且可直接解析的优惠。实际结算可能受会员等级、地区、库存等因素影响。</p>
+        </details>
+        <details>
+          <summary>必须配置 LLM 吗？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+          <p>不需要。默认使用本地规则生成报告和回复追问。配置 Provider 后，追问区才会调用外部模型。</p>
+        </details>
+        <details>
+          <summary>自动整理会批量采集吗？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+          <p>不会。自动整理只作用于用户当前打开的页面，不会自动翻页或打开新标签。随时可在扩展弹窗中关闭。</p>
+        </details>
+        <details>
+          <summary>MCP 可以远程访问吗？<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+          <p>不可以。MCP endpoint 校验请求 Origin，只接受 localhost 来源。</p>
+        </details>
       </div>
-    </div>
-  </section>
+    </section>
+
+  </div>
 </main>
 
 <footer class="footer">
   <div class="wrap footer-grid">
     <div class="footer-brand">
-      <img src="assets/brand/dealbuddy-logo.svg" alt="DealBuddy 购物搭子" width="300" height="100">
-      <p>capture facts · clarify needs · choose calmly</p>
+      <img src="assets/brand/dealbuddy-logo.svg" alt="DealBuddy 购物搭子" width="260" height="87">
     </div>
-    <nav class="footer-links" aria-label="页脚链接">
-      <div>
-        <h4>产品</h4>
-        <a href="https://github.com/cyberchen1995/DealBuddy/releases/download/v0.3.0/dealbuddy-capture-0.3.0.zip">下载 v0.3.0</a>
-        <a href="https://github.com/cyberchen1995/DealBuddy/releases">全部版本</a>
-        <a href="https://github.com/cyberchen1995/DealBuddy">GitHub 仓库</a>
-      </div>
-      <div>
-        <h4>说明</h4>
-        <a href="privacy/">隐私政策</a>
-        <a href="https://github.com/cyberchen1995/DealBuddy/blob/main/LICENSE">MIT License</a>
-        <a href="https://github.com/cyberchen1995/DealBuddy/issues">问题反馈</a>
-      </div>
+    <nav class="footer-links-row" aria-label="页脚链接">
+      <a href="https://github.com/cyberchen1995/DealBuddy/releases/download/v0.3.0/dealbuddy-capture-0.3.0.zip">下载 dealbuddy-capture-0.3.0.zip</a>
+      <a href="https://github.com/cyberchen1995/DealBuddy">GitHub</a>
+      <a href="privacy/">查看隐私政策</a>
+      <a href="https://github.com/cyberchen1995/DealBuddy/blob/main/LICENSE">MIT License</a>
     </nav>
   </div>
   <div class="wrap footer-legal">
-    <p>DealBuddy 只整理商品页面上可见的信息；所有价格为页面采集时点的估算，最终请以平台订单结算页为准。</p>
-    <p>© 2026 CyberChen · DealBuddy 购物搭子 · MIT License</p>
+    <p>价格以各平台订单结算页为准。</p>
+    <p>© 2026 CyberChen</p>
   </div>
 </footer>
 </body>
