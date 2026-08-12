@@ -1,0 +1,988 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方向4 · 终端极客风 — DealBuddy mockup</title>
+<style>
+
+.mockup-banner {
+  position: sticky; top: 0; z-index: 9999;
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 16px; background: #1c1c1e; color: #f2f2f4;
+  font: 500 13px/1.4 ui-sans-serif, system-ui, "PingFang SC", sans-serif;
+}
+.mockup-banner .mb-tag { opacity: .65; }
+.mockup-banner button.mb-toggle {
+  margin-left: auto; padding: 4px 12px; min-height: 0;
+  border: 1px solid #4a4a4f; border-radius: 6px;
+  background: #2c2c2e; color: #f2f2f4; font: inherit; cursor: pointer;
+  box-shadow: none; transform: none; text-transform: none; letter-spacing: 0;
+}
+
+/* @meta num="4" name="终端极客风" slug="terminal-grid" theme="dark" tagline="全等宽零圆角,本地工具的坦诚形态,数据即界面" */
+
+/* ============================================================
+   DIRECTION 04 — terminal-grid(工程台账)
+   全等宽 / 零圆角 / 1px 实线 / 高密度。
+   参考现代终端(Warp / lazygit),不做老式 hacker 绿;
+   琥珀 = 唯一高亮(价格与主强调),绿色只做 ok/输出语义。
+   ============================================================ */
+
+/* ---------------- tokens · light(纸带终端 / 热敏纸台账) ---------------- */
+:root {
+  color-scheme: light;
+
+  --db-bg: #f0efe6;
+  --db-surface: #faf9f2;
+  --db-surface-soft: #e7e5d8;
+  --db-surface-raised: #f5f3e9;
+
+  --db-line: #c9c6b2;
+  --db-line-strong: #aaa78e;
+
+  --db-text: #2c322c;
+  --db-muted: #6e766e;
+  --db-muted-strong: #565e56;
+
+  --db-accent: #b0680f;
+  --db-accent-strong: #8a4f08;
+  --db-accent-soft: rgba(176, 104, 15, 0.12);
+
+  --db-ok: #2f7d3f;
+  --db-warn: #b0680f;
+  --db-danger: #b3382c;
+  --db-danger-soft: rgba(179, 56, 44, 0.12);
+
+  --db-shadow: none;
+  --db-scanline: rgba(44, 50, 44, 0.03);
+
+  /* 按钮反色态(hover 填充 / 填充上的文字) */
+  --db-invert-bg: #a05c0a;
+  --db-invert-text: #faf9f2;
+
+  /* 非颜色 token:终端没有圆角 */
+  --db-radius-s: 0px;
+  --db-radius-m: 0px;
+  --db-radius-l: 0px;
+  --db-font-body: ui-monospace, "SF Mono", Menlo, Consolas, "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", monospace;
+  --db-font-mono: var(--db-font-body);
+  --db-shell: 1480px;
+}
+
+/* ---------------- tokens · dark(默认 / 深灰绿黑机箱) ---------------- */
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --db-bg: #0d100d;
+  --db-surface: #131713;
+  --db-surface-soft: #191e19;
+  --db-surface-raised: #161b16;
+
+  --db-line: #2a332a;
+  --db-line-strong: #3d4a3d;
+
+  --db-text: #c8d2c8;
+  --db-muted: #7d8a7d;
+  --db-muted-strong: #a3b0a3;
+
+  --db-accent: #ffb454;
+  --db-accent-strong: #ffc878;
+  --db-accent-soft: rgba(255, 180, 84, 0.13);
+
+  --db-ok: #7ee787;
+  --db-warn: #ffb454;
+  --db-danger: #ff6b60;
+  --db-danger-soft: rgba(255, 107, 96, 0.12);
+
+  --db-shadow: none;
+  --db-scanline: rgba(255, 255, 255, 0.012);
+
+  --db-invert-bg: #ffb454;
+  --db-invert-text: #0d100d;
+}
+
+/* ---------------- base ---------------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background-color: var(--db-bg);
+  /* 静态扫描线纹理(非动画) */
+  background-image: repeating-linear-gradient(0deg, var(--db-scanline) 0 1px, transparent 1px 3px);
+  color: var(--db-text);
+  font-family: var(--db-font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, p { margin: 0; }
+a { color: inherit; text-decoration: none; }
+a:focus-visible { outline: 1px dashed var(--db-accent); outline-offset: 2px; }
+::selection { background: var(--db-accent); color: var(--db-invert-text); }
+
+/* 100ms linear:终端没有缓动的矫情 */
+a, button, summary, input, textarea, label, .session-item, .meta-pill {
+  transition: color 100ms linear, background-color 100ms linear,
+    border-color 100ms linear, opacity 100ms linear;
+}
+
+/* 细滚动条 */
+.report, .offer-list, .messages {
+  scrollbar-width: thin;
+  scrollbar-color: var(--db-line-strong) transparent;
+}
+.report::-webkit-scrollbar, .offer-list::-webkit-scrollbar, .messages::-webkit-scrollbar { width: 8px; }
+.report::-webkit-scrollbar-thumb, .offer-list::-webkit-scrollbar-thumb, .messages::-webkit-scrollbar-thumb { background: var(--db-line-strong); }
+.report::-webkit-scrollbar-track, .offer-list::-webkit-scrollbar-track, .messages::-webkit-scrollbar-track { background: transparent; }
+
+/* ---------------- header ---------------- */
+.app-header { background: var(--db-surface); border-bottom: 1px solid var(--db-line-strong); }
+
+.header-inner {
+  max-width: var(--db-shell);
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.brand { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.brand-name { margin: 0; font-size: 11px; letter-spacing: 0.08em; color: var(--db-muted-strong); }
+.brand-name::before { content: "$ "; color: var(--db-ok); }
+.brand h1 { font-size: 17px; font-weight: 700; letter-spacing: 0.02em; color: var(--db-text); }
+.brand h1::after { content: "_"; color: var(--db-accent); margin-left: 2px; }
+.header-copy { margin: 2px 0 0; font-size: 12px; color: var(--db-muted); max-width: 56ch; }
+
+.status-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+/* 方括号感:无底色 + line 边框 */
+.status-chip {
+  display: inline-block;
+  padding: 3px 8px;
+  border: 1px solid var(--db-line);
+  border-radius: var(--db-radius-s);
+  background: transparent;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--db-muted-strong);
+  white-space: nowrap;
+}
+#service-status::before { content: "\25CF  "; color: var(--db-ok); }
+#llm-status::before { content: "\25CF  "; color: var(--db-warn); }
+
+/* ---------------- workspace 三栏 ---------------- */
+.workspace {
+  max-width: var(--db-shell);
+  margin: 0 auto;
+  padding: 14px 20px 22px;
+  display: grid;
+  grid-template-columns: minmax(270px, 320px) minmax(470px, 1fr) minmax(360px, 430px);
+  gap: 12px;
+  align-items: stretch;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--db-surface);
+  border: 1px solid var(--db-line);
+  border-radius: var(--db-radius-m);
+  box-shadow: var(--db-shadow);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 9px 12px;
+  background: var(--db-surface-raised);
+  border-bottom: 1px solid var(--db-line);
+}
+
+.panel-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.panel-title h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.02em; color: var(--db-text); }
+.panel-title h2::before { content: "## "; color: var(--db-muted); }
+.muted { color: var(--db-muted); font-size: 11px; }
+.panel-head button { padding: 3px 8px; font-size: 12px; }
+.panel-body { flex: 1; padding: 12px; min-width: 0; }
+.sidebar-body { display: flex; flex-direction: column; gap: 12px; }
+
+/* ---------------- 表单 ---------------- */
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.session-form { padding-bottom: 12px; border-bottom: 1px dashed var(--db-line); }
+.field { display: flex; flex-direction: column; gap: 4px; }
+label { font-size: 12px; color: var(--db-muted-strong); letter-spacing: 0.02em; }
+.field:focus-within label { color: var(--db-accent); }
+
+input, textarea {
+  width: 100%;
+  padding: 7px 9px;
+  background: var(--db-bg);
+  border: 1px solid var(--db-line);
+  border-radius: var(--db-radius-s);
+  color: var(--db-text);
+  font-family: var(--db-font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  caret-color: var(--db-accent);
+}
+textarea { min-height: 68px; resize: vertical; }
+input::placeholder, textarea::placeholder { color: var(--db-muted); opacity: 1; }
+input:hover, textarea:hover { border-color: var(--db-line-strong); }
+/* focus:accent 边,无光环 */
+input:focus, textarea:focus, input:focus-visible, textarea:focus-visible {
+  outline: none;
+  border-color: var(--db-accent);
+}
+input:disabled, textarea:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.helper { font-size: 11px; color: var(--db-muted); }
+.form-actions { display: flex; gap: 8px; }
+
+/* ---------------- 按钮:透明底 + 方括号 ---------------- */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 10px;
+  background: transparent;
+  border: 1px solid var(--db-accent);
+  border-radius: var(--db-radius-s);
+  color: var(--db-accent);
+  font-family: var(--db-font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+button::before { content: "["; margin-right: 0.6ch; }
+button::after { content: "]"; margin-left: 0.6ch; }
+
+button.secondary { border-color: var(--db-line-strong); color: var(--db-text); }
+button.danger { border-color: var(--db-danger); color: var(--db-danger); }
+
+/* hover 反色:accent 底 + bg 色字 */
+button:not(:disabled):hover {
+  background: var(--db-invert-bg);
+  border-color: var(--db-invert-bg);
+  color: var(--db-invert-text);
+}
+button:not(:disabled):active {
+  background: var(--db-accent-strong);
+  border-color: var(--db-accent-strong);
+  color: var(--db-invert-text);
+}
+button.danger:not(:disabled):hover,
+button.danger:not(:disabled):active {
+  background: var(--db-danger);
+  border-color: var(--db-danger);
+  color: var(--db-invert-text);
+}
+button:focus-visible { outline: 1px dashed var(--db-accent); outline-offset: 2px; }
+button:disabled {
+  background: transparent;
+  border-color: var(--db-line);
+  color: var(--db-muted);
+  cursor: not-allowed;
+}
+
+/* 静态复刻主按钮 hover */
+button.demo-hover {
+  background: var(--db-invert-bg);
+  border-color: var(--db-invert-bg);
+  color: var(--db-invert-text);
+}
+
+/* 加载中:warn 色 + 离散闪烁(终端光标节奏) */
+button.busy {
+  border-color: var(--db-line-strong);
+  color: var(--db-warn);
+  cursor: progress;
+  animation: db-blink 1.1s steps(1, end) infinite;
+}
+@keyframes db-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* ---------------- 会话列表 ---------------- */
+.session-list { display: flex; flex-direction: column; gap: 6px; }
+
+.session-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  width: 100%;
+  padding: 8px 10px;
+  text-align: left;
+  background: transparent;
+  border: 1px solid var(--db-line);
+  border-left: 2px solid var(--db-line);
+  color: var(--db-text);
+  font-weight: 400;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.session-item::before, .session-item::after { content: none; }
+.session-item strong { font-size: 13px; font-weight: 600; color: var(--db-text); }
+
+.session-list .session-item:hover {
+  background: var(--db-surface-soft);
+  border-color: var(--db-line-strong);
+  border-left-color: var(--db-line-strong);
+  color: var(--db-text);
+}
+.session-list .session-item:active {
+  background: var(--db-accent-soft);
+  border-left-color: var(--db-accent);
+  color: var(--db-text);
+}
+.session-list .session-item:focus-visible { outline: 1px dashed var(--db-accent); outline-offset: 2px; }
+
+/* 激活项:accent-soft 底 + 左 2px accent */
+.session-item.active,
+.session-list .session-item.active:hover {
+  background: var(--db-accent-soft);
+  border-color: var(--db-line-strong);
+  border-left: 2px solid var(--db-accent);
+}
+
+.session-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--db-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------------- disclosure(LLM 设置) ---------------- */
+summary { list-style: none; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+
+.disclosure { border: 1px solid var(--db-line); background: var(--db-surface-raised); }
+.disclosure-summary { display: flex; align-items: flex-start; gap: 8px; padding: 9px 10px; }
+.disclosure-summary::before { content: "[+]"; font-size: 11px; color: var(--db-muted); margin-top: 2px; }
+details[open] > .disclosure-summary::before { content: "[-]"; color: var(--db-accent); }
+.disclosure-summary:hover { background: var(--db-surface-soft); }
+.disclosure-summary:active { background: var(--db-accent-soft); }
+.disclosure-summary:focus-visible { outline: 1px dashed var(--db-accent); outline-offset: -2px; }
+
+.summary-copy { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.settings-title-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.settings-title-row strong { font-size: 13px; font-weight: 600; }
+.summary-action { font-size: 12px; color: var(--db-accent); white-space: nowrap; }
+.summary-action::before { content: "["; }
+.summary-action::after { content: "]"; }
+.disclosure-summary:hover .summary-action { color: var(--db-accent-strong); }
+.summary-status { font-size: 11px; color: var(--db-muted); }
+.disclosure-body { padding: 9px 10px; border-top: 1px dashed var(--db-line); }
+
+/* 注释风隐私说明 */
+.privacy-note { font-size: 11px; color: var(--db-muted); }
+.privacy-note::before { content: "# "; }
+
+/* ---------------- notice ---------------- */
+.notice {
+  padding: 8px 10px;
+  border: 1px solid var(--db-line);
+  border-left: 3px solid var(--db-line-strong);
+  background: var(--db-surface-soft);
+  font-size: 12px;
+  color: var(--db-muted-strong);
+}
+.notice.error {
+  border-color: var(--db-danger);
+  border-left-width: 3px;
+  background: var(--db-danger-soft);
+  color: var(--db-danger);
+}
+.notice.error::before { content: "! "; font-weight: 700; }
+
+/* ---------------- 分析栏 ---------------- */
+.analysis-stack { display: flex; flex-direction: column; gap: 12px; }
+
+/* 报告 = 文件视图(bg 底,像 less 开了一个文件) */
+.report {
+  background: var(--db-bg);
+  border: 1px solid var(--db-line);
+  padding: 12px;
+  max-height: min(50vh, 520px);
+  overflow-y: auto;
+}
+
+.markdown-content { font-size: 13px; line-height: 1.55; }
+.markdown-content h1 {
+  font-size: 14px;
+  font-weight: 700;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--db-line);
+}
+.markdown-content h1::before { content: "# "; color: var(--db-muted); }
+.markdown-content h2 { font-size: 13px; font-weight: 700; margin: 14px 0 6px; }
+.markdown-content h2::before { content: "## "; color: var(--db-muted); }
+.markdown-content p { margin: 6px 0; }
+.markdown-content ul { margin: 6px 0; padding-left: 0; list-style: none; }
+.markdown-content li { position: relative; padding-left: 2ch; margin: 3px 0; }
+.markdown-content li::before { content: "-"; position: absolute; left: 0; color: var(--db-muted); }
+.markdown-content a {
+  color: var(--db-text);
+  text-decoration: underline;
+  text-decoration-color: var(--db-line-strong);
+  text-underline-offset: 3px;
+}
+.markdown-content a:hover { color: var(--db-accent); text-decoration-color: var(--db-accent); }
+.markdown-content strong { font-weight: 700; }
+
+.report-notice {
+  margin: 8px 0;
+  padding: 7px 9px;
+  border: 1px solid var(--db-line);
+  border-left: 3px solid var(--db-accent);
+  background: var(--db-accent-soft);
+  font-size: 12px;
+  color: var(--db-muted-strong);
+}
+
+/* ---------------- 追问对话 ---------------- */
+.conversation {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-top: 1px dashed var(--db-line-strong);
+  padding-top: 12px;
+}
+.messages { display: flex; flex-direction: column; gap: 8px; max-height: 340px; overflow-y: auto; }
+.message { padding: 8px 10px; border: 1px solid var(--db-line); }
+
+/* user = 输入回显;assistant = 程序输出(ok 绿) */
+.message.user { background: transparent; border-left: 2px solid var(--db-line-strong); }
+.message.assistant { background: var(--db-surface-soft); border-left: 2px solid var(--db-ok); }
+.message-role { font-size: 11px; color: var(--db-muted); margin-bottom: 4px; }
+.message-role::before { content: "> "; }
+.message.assistant .message-role { color: var(--db-ok); }
+.message .markdown-content { font-size: 12.5px; }
+
+.chat-form { display: flex; flex-direction: column; gap: 8px; }
+.chat-form textarea { min-height: 60px; }
+
+/* ---------------- 商品栏 ---------------- */
+.products-panel .panel-body { display: flex; flex-direction: column; }
+
+.offer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: min(62vh, 700px);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.offer-card { border: 1px solid var(--db-line); background: var(--db-surface-raised); }
+.offer-card[open] { border-color: var(--db-line-strong); }
+
+.offer-summary {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 9px 34px 9px 10px;
+}
+.offer-summary::after {
+  content: "[+]";
+  position: absolute;
+  top: 9px;
+  right: 10px;
+  font-size: 11px;
+  color: var(--db-muted);
+}
+details[open] > .offer-summary::after { content: "[-]"; color: var(--db-accent); }
+.offer-summary:hover { background: var(--db-surface-soft); }
+.offer-summary:active { background: var(--db-accent-soft); }
+.offer-summary:focus-visible { outline: 1px dashed var(--db-accent); outline-offset: -2px; }
+
+.offer-headline { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.offer-headline a { font-size: 13px; font-weight: 600; color: var(--db-text); }
+.offer-headline a:hover { color: var(--db-accent); text-decoration: underline; text-underline-offset: 3px; }
+
+.offer-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.meta-pill {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--db-line-strong);
+  border-radius: var(--db-radius-s);
+  background: transparent;
+  font-size: 11px;
+  color: var(--db-muted-strong);
+  white-space: nowrap;
+}
+/* 价格 = 唯一琥珀高亮 */
+.meta-pill.price {
+  border-color: var(--db-accent);
+  background: var(--db-accent-soft);
+  color: var(--db-accent);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.offer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  border-top: 1px solid var(--db-line);
+}
+.offer-insight { font-size: 12px; color: var(--db-muted-strong); }
+.offer-insight::before { content: "# "; color: var(--db-muted); }
+
+/* 紧凑两列台账 */
+.detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; }
+.detail-item { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.detail-label { font-size: 12px; color: var(--db-muted); }
+.detail-value {
+  font-size: 12.5px;
+  color: var(--db-text);
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px dashed var(--db-line);
+  padding-top: 8px;
+}
+.detail-section h4 { font-size: 12px; font-weight: 600; color: var(--db-muted-strong); }
+.detail-section h4::before { content: "### "; color: var(--db-muted); }
+
+.inline-actions { display: flex; gap: 8px; border-top: 1px dashed var(--db-line); padding-top: 10px; }
+.inline-actions button { padding: 3px 8px; font-size: 12px; }
+
+/* ---------------- 样张区(评审用,与工作台区隔) ---------------- */
+.component-samples { max-width: var(--db-shell); margin: 8px auto 28px; padding: 0 20px; }
+
+.samples-banner {
+  padding: 7px 10px;
+  margin-bottom: 12px;
+  border: 1px dashed var(--db-line-strong);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--db-muted);
+}
+.samples-banner::before { content: "// "; }
+
+.samples-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; }
+
+.sample-block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--db-line);
+  background: var(--db-surface);
+}
+.sample-block h3 { font-size: 12.5px; font-weight: 600; }
+.sample-block h3::before { content: "## "; color: var(--db-muted); }
+.sample-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* 危险操作确认 */
+.confirm-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--db-line-strong);
+  border-left: 3px solid var(--db-danger);
+  background: var(--db-surface-raised);
+}
+.confirm-title { font-size: 13px; font-weight: 700; color: var(--db-danger); }
+.confirm-copy { font-size: 12px; color: var(--db-muted-strong); }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+/* 空状态:[ 暂无数据 ] 感 */
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 22px 14px;
+  border: 1px dashed var(--db-line-strong);
+  text-align: center;
+  font-size: 12px;
+  color: var(--db-muted);
+}
+.empty-state > div { display: flex; flex-direction: column; gap: 4px; }
+.empty-state.compact { padding: 14px; }
+.empty-title { font-size: 13px; font-weight: 600; color: var(--db-muted-strong); }
+.empty-title::before { content: "[ "; color: var(--db-muted); }
+.empty-title::after { content: " ]"; color: var(--db-muted); }
+
+/* ---------------- 断点 ---------------- */
+@media (max-width: 1260px) {
+  .workspace { grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); }
+  .products-panel { grid-column: 1 / -1; }
+  .report { max-height: min(46vh, 480px); }
+  .offer-list { max-height: none; overflow-y: visible; }
+}
+
+@media (max-width: 860px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); padding: 12px 12px 18px; gap: 10px; }
+  .products-panel { grid-column: auto; }
+  .header-inner { flex-direction: column; align-items: flex-start; gap: 10px; padding: 12px; }
+  .component-samples { padding: 0 12px; }
+  .detail-grid { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* ---------------- reduced motion ---------------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+  button.busy { animation: none; opacity: 0.6; }
+}
+
+</style>
+</head>
+<body>
+<div class="mockup-banner">
+  <strong>方向 4 · 终端极客风</strong>
+  <span class="mb-tag">全等宽零圆角,本地工具的坦诚形态,数据即界面</span>
+  <button type="button" class="mb-toggle">切换亮 / 暗</button>
+</div>
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <p class="brand-name">购物搭子</p>
+      <h1>DealBuddy 工作台</h1>
+      <p class="header-copy">
+        本地采集商品、整理规格、生成报告，并在需要时接入你选择的 LLM。
+      </p>
+    </div>
+    <div class="status-row" aria-label="服务状态">
+      <span class="status-chip" id="service-status">服务正常</span>
+      <span class="status-chip" id="current-status">当前会话：a1b2c3d4e5f6</span>
+      <span class="status-chip" id="llm-status">LLM：已配置</span>
+    </div>
+  </div>
+</header>
+
+<main class="workspace">
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2>会话</h2>
+        <p class="muted">扩展会把商品投递到当前会话。</p>
+      </div>
+      <button class="secondary" type="button">刷新</button>
+    </div>
+    <div class="panel-body sidebar-body">
+      <form class="stack session-form">
+        <div class="field">
+          <label for="category-input">品类</label>
+          <input id="category-input" placeholder="电视 / 扫地机器人 / 手机" />
+        </div>
+        <div class="field">
+          <label for="request-input">原始需求</label>
+          <textarea id="request-input" placeholder="预算5000以内，65英寸，主要看电影"></textarea>
+          <p class="helper">用于生成报告上下文，也可以在追问区继续细化。</p>
+        </div>
+        <div class="form-actions">
+          <button type="submit">新建会话</button>
+        </div>
+      </form>
+      <div class="session-list">
+        <button type="button" class="session-item active">
+          <strong>降噪耳机</strong>
+          <span class="session-meta">
+            <span>a1b2c3d4e5f6</span>
+            <span>v2</span>
+          </span>
+        </button>
+        <button type="button" class="session-item">
+          <strong>机械键盘</strong>
+          <span class="session-meta">
+            <span>f6e5d4c3b2a1</span>
+            <span>v1</span>
+          </span>
+        </button>
+      </div>
+
+      <details class="disclosure llm-disclosure">
+        <summary class="disclosure-summary llm-summary">
+          <span class="summary-copy">
+            <span class="settings-title-row">
+              <strong>LLM Provider</strong>
+              <span class="summary-action">设置</span>
+            </span>
+            <span class="summary-status">已配置：openai-compatible / kimi-k3</span>
+          </span>
+        </summary>
+        <div class="disclosure-body llm-body">
+          <p class="privacy-note">默认仅本地分析</p>
+        </div>
+      </details>
+
+      <div class="notice" id="page-message">已切换到会话 a1b2c3d4e5f6。</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2>分析与追问</h2>
+        <p class="muted">报告和对话都保存在当前会话中。</p>
+      </div>
+      <button class="secondary" type="button">重新生成</button>
+    </div>
+    <div class="panel-body analysis-stack">
+      <div class="report markdown-content">
+        <h1>DealBuddy 选品报告：降噪耳机</h1>
+        <p>需求版本：v2</p>
+        <div class="report-notice">
+          价格来自页面可见信息。估算应付只计算页面明确展示且可直接解析的优惠，不代表结算价格。
+        </div>
+        <h2>最符合需求</h2>
+        <ul>
+          <li>商品：<a href="#">声阔 Space One Pro 头戴式主动降噪耳机 蓝牙5.4</a></li>
+          <li>平台：tmall</li>
+          <li>店铺：声阔官方旗舰店</li>
+          <li>匹配分：31.50</li>
+          <li>SKU：曜石黑 / 官方标配</li>
+          <li>页面展示价：¥1099.00</li>
+          <li>估算应付：¥999.00</li>
+          <li>优劣短评：降噪深度和佩戴舒适度突出，但折叠体积偏大。</li>
+          <li>复核时间：2026-08-10T14:22:31+00:00</li>
+          <li>数据可信度：high</li>
+        </ul>
+        <h2>最低预算</h2>
+        <ul>
+          <li>商品：<a href="#">Redmi Buds 6 Pro 真无线降噪耳机</a></li>
+          <li>平台：jd</li>
+          <li>店铺：小米京东自营旗舰店</li>
+          <li>页面展示价：¥379.00</li>
+          <li>估算应付：¥349.00</li>
+          <li>优劣短评：预算内降噪表现均衡，通话拾音一般。</li>
+        </ul>
+        <h2>综合性价比</h2>
+        <ul>
+          <li>商品：<a href="#">索尼 WH-CH720N 头戴式无线降噪耳机</a></li>
+          <li>平台：tmall</li>
+          <li>店铺：索尼官方旗舰店</li>
+          <li>页面展示价：¥699.00</li>
+          <li>估算应付：¥649.00</li>
+          <li>优劣短评：轻量佩戴与续航是强项，降噪深度弱于头部机型。</li>
+        </ul>
+        <h2>值得加预算</h2>
+        <ul>
+          <li>商品：<a href="#">华为 FreeBuds Pro 4 真无线降噪耳机</a></li>
+          <li>平台：jd</li>
+          <li>店铺：华为京东自营官方旗舰店</li>
+          <li>页面展示价：¥1199.00</li>
+          <li>估算应付：¥1149.00</li>
+          <li>优劣短评：多设备协同和通话降噪领先，但价格接近预算上限。</li>
+        </ul>
+      </div>
+      <div class="conversation">
+        <div class="messages">
+          <div class="message user">
+            <div class="message-role">user</div>
+            <div class="markdown-content">预算 1500 以内，通勤地铁降噪优先，偶尔要接电话，头戴入耳都行。</div>
+          </div>
+          <div class="message assistant">
+            <div class="message-role">assistant / kimi-k3</div>
+            <div class="markdown-content">
+              <p>按你的通勤优先级，两条主线：</p>
+              <ul>
+                <li><strong>头戴优先</strong>：声阔 Space One Pro 的降噪深度在四款里最好，地铁低频噪音压制明显，缺点是夏天佩戴偏热。</li>
+                <li><strong>便携优先</strong>：华为 FreeBuds Pro 4 通话降噪最稳，适合经常接电话的场景。</li>
+              </ul>
+              <p>如果预算想留余量，索尼 WH-CH720N 估算应付 ¥649，是舒适度和价格的折中。需要我按「通话质量」再拉一次对比吗？</p>
+            </div>
+          </div>
+        </div>
+        <form class="chat-form">
+          <div class="field">
+            <label for="chat-input">追问当前会话</label>
+            <textarea id="chat-input" placeholder="例如：这几款里哪一款更适合电影和游戏？"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit">发送</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel products-panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2>商品列表</h2>
+        <p class="muted">展开卡片查看完整文本，复制为 Markdown。</p>
+      </div>
+      <span class="status-chip">4 个商品</span>
+    </div>
+    <div class="panel-body">
+      <div class="offer-list">
+        <details class="offer-card" open>
+          <summary class="offer-summary">
+            <span class="offer-headline">
+              <a href="#">声阔 Space One Pro 头戴式主动降噪耳机 蓝牙5.4 自适应降噪</a>
+              <span class="muted">声阔官方旗舰店</span>
+            </span>
+            <span class="offer-meta">
+              <span class="meta-pill">tmall</span>
+              <span class="meta-pill price">¥1099.00</span>
+              <span class="meta-pill">SKU 曜石黑 / 官方标配</span>
+            </span>
+          </summary>
+          <div class="offer-body">
+            <div class="offer-insight">优劣短评：降噪深度和佩戴舒适度突出，但折叠体积偏大。</div>
+            <div class="detail-grid">
+              <div class="detail-item"><span class="detail-label">平台</span><span class="detail-value">tmall</span></div>
+              <div class="detail-item"><span class="detail-label">店铺</span><span class="detail-value">声阔官方旗舰店</span></div>
+              <div class="detail-item"><span class="detail-label">品牌</span><span class="detail-value">声阔 soundcore</span></div>
+              <div class="detail-item"><span class="detail-label">型号</span><span class="detail-value">Space One Pro</span></div>
+              <div class="detail-item"><span class="detail-label">SKU</span><span class="detail-value">曜石黑 / 官方标配</span></div>
+              <div class="detail-item"><span class="detail-label">页面展示价</span><span class="detail-value">¥1099.00</span></div>
+              <div class="detail-item"><span class="detail-label">估算应付</span><span class="detail-value">¥999.00</span></div>
+              <div class="detail-item"><span class="detail-label">标价</span><span class="detail-value">¥1299.00</span></div>
+              <div class="detail-item"><span class="detail-label">优惠</span><span class="detail-value">店铺券 ¥100</span></div>
+              <div class="detail-item"><span class="detail-label">优惠条件</span><span class="detail-value">满 ¥1000 可用</span></div>
+              <div class="detail-item"><span class="detail-label">库存</span><span class="detail-value">现货</span></div>
+              <div class="detail-item"><span class="detail-label">可信度</span><span class="detail-value">high</span></div>
+              <div class="detail-item"><span class="detail-label">复核时间</span><span class="detail-value">2026-08-10T14:22:31+00:00</span></div>
+              <div class="detail-item"><span class="detail-label">链接</span><span class="detail-value">https://detail.example.com/item/100234</span></div>
+            </div>
+            <div class="detail-section">
+              <h4>规格</h4>
+              <div class="detail-grid">
+                <div class="detail-item"><span class="detail-label">蓝牙版本</span><span class="detail-value">5.4</span></div>
+                <div class="detail-item"><span class="detail-label">续航</span><span class="detail-value">降噪开 40h / 关 60h</span></div>
+                <div class="detail-item"><span class="detail-label">重量</span><span class="detail-value">280g</span></div>
+                <div class="detail-item"><span class="detail-label">快充</span><span class="detail-value">充 5 分钟听 4 小时</span></div>
+              </div>
+            </div>
+            <div class="inline-actions">
+              <button class="secondary" type="button">复制 Markdown</button>
+              <button class="danger" type="button">删除</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="offer-card">
+          <summary class="offer-summary">
+            <span class="offer-headline">
+              <a href="#">Redmi Buds 6 Pro 真无线降噪耳机 55dB 深度降噪</a>
+              <span class="muted">小米京东自营旗舰店</span>
+            </span>
+            <span class="offer-meta">
+              <span class="meta-pill">jd</span>
+              <span class="meta-pill price">¥379.00</span>
+              <span class="meta-pill">SKU 晨雾白</span>
+            </span>
+          </summary>
+        </details>
+
+        <details class="offer-card">
+          <summary class="offer-summary">
+            <span class="offer-headline">
+              <a href="#">华为 FreeBuds Pro 4 真无线降噪耳机 星闪连接</a>
+              <span class="muted">华为京东自营官方旗舰店</span>
+            </span>
+            <span class="offer-meta">
+              <span class="meta-pill">jd</span>
+              <span class="meta-pill price">¥1199.00</span>
+              <span class="meta-pill">SKU 雅川青</span>
+            </span>
+          </summary>
+        </details>
+
+        <details class="offer-card">
+          <summary class="offer-summary">
+            <span class="offer-headline">
+              <a href="#">索尼 WH-CH720N 头戴式无线降噪耳机 轻量长续航</a>
+              <span class="muted">索尼官方旗舰店</span>
+            </span>
+            <span class="offer-meta">
+              <span class="meta-pill">tmall</span>
+              <span class="meta-pill price">¥699.00</span>
+              <span class="meta-pill">SKU 蓝色</span>
+            </span>
+          </summary>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="component-samples" aria-label="组件状态样张">
+  <div class="samples-banner">组件状态样张 · 仅供方向评审，不属于工作台页面</div>
+  <div class="samples-grid">
+    <div class="sample-block">
+      <h3>按钮状态</h3>
+      <div class="sample-row">
+        <button type="button">默认</button>
+        <button type="button" class="demo-hover">悬停</button>
+        <button type="button" disabled>禁用</button>
+        <button type="button" class="busy" disabled>生成中…</button>
+      </div>
+      <div class="sample-row">
+        <button type="button" class="secondary">次要按钮</button>
+        <button type="button" class="danger">删除</button>
+      </div>
+    </div>
+    <div class="sample-block">
+      <h3>消息提示</h3>
+      <div class="notice">已复制商品 Markdown。</div>
+      <div class="notice error">投递失败：无法连接本地服务，请确认 dealbuddy web 正在运行。</div>
+    </div>
+    <div class="sample-block">
+      <h3>危险操作确认</h3>
+      <div class="confirm-card">
+        <p class="confirm-title">删除这个商品？</p>
+        <p class="confirm-copy">「Redmi Buds 6 Pro 真无线降噪耳机」将从当前会话移除，报告会重新生成。</p>
+        <div class="confirm-actions">
+          <button type="button" class="secondary">取消</button>
+          <button type="button" class="danger">删除</button>
+        </div>
+      </div>
+    </div>
+    <div class="sample-block">
+      <h3>空状态</h3>
+      <div class="empty-state compact">
+        <div>
+          <div class="empty-title">还没有会话</div>
+          <div>先输入品类和需求，再用浏览器扩展采集商品。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+
+document.querySelector('.mb-toggle').addEventListener('click', () => {
+  const el = document.documentElement;
+  el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+});
+
+</script>
+</body>
+</html>

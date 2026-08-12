@@ -1,0 +1,999 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>方向3 · 纸感编辑部风 — DealBuddy mockup</title>
+<style>
+
+.mockup-banner {
+  position: sticky; top: 0; z-index: 9999;
+  display: flex; align-items: center; gap: 12px;
+  padding: 8px 16px; background: #1c1c1e; color: #f2f2f4;
+  font: 500 13px/1.4 ui-sans-serif, system-ui, "PingFang SC", sans-serif;
+}
+.mockup-banner .mb-tag { opacity: .65; }
+.mockup-banner button.mb-toggle {
+  margin-left: auto; padding: 4px 12px; min-height: 0;
+  border: 1px solid #4a4a4f; border-radius: 6px;
+  background: #2c2c2e; color: #f2f2f4; font: inherit; cursor: pointer;
+  box-shadow: none; transform: none; text-transform: none; letter-spacing: 0;
+}
+
+/* @meta num="3" name="纸感编辑部风" slug="editorial-paper" tagline="衬线标题墨色正文,一份可以署名的选品研究报告" theme="light" */
+
+/* ==========================================================================
+   方向 3 · 纸感编辑部风(证据档案)
+   纸色底 + 墨色字 + 衬线标题 + 细规则线分层 + 琥珀强调。
+   纪律:无发光、无渐变、无彩色投影、近直角;层级全部交给规则线与字体。
+   额外变量:--db-danger-ink(危险底色上的可读文字)、--db-speed(过渡时长)。
+   ========================================================================== */
+/* ---------- 主题变量:亮色(默认,晨读纸面) ---------- */
+:root {
+  color-scheme: light;
+
+  --db-bg: #f6f2ea;
+  --db-surface: #fdfbf6;
+  --db-surface-soft: #f0eadf;
+  --db-surface-raised: #fffef9;
+  --db-line: #d9d1c0;
+  --db-line-strong: #b8ad96;
+  --db-text: #211d16;
+  --db-muted: #756c5c;
+  --db-muted-strong: #55503f;
+  --db-accent: #8f5a12;
+  --db-accent-strong: #6e4409;
+  --db-accent-soft: #f3e7d0;
+  --db-warn: #9a6200;
+  --db-danger: #9c3b2e;
+  --db-danger-soft: #f3e2de;
+  --db-danger-ink: #9c3b2e;
+  --db-shadow: rgba(60, 50, 30, 0.08);
+
+  --db-radius-s: 2px;
+  --db-radius-m: 3px;
+  --db-radius-l: 4px;
+
+  --db-font-body: -apple-system, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+  --db-font-heading: Georgia, "Songti SC", "STSong", serif;
+  --db-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --db-speed: 150ms;
+}
+/* ---------- 主题变量:暗色(夜读档案) ---------- */
+html[data-theme="dark"] {
+  color-scheme: dark;
+
+  --db-bg: #1d1a15;
+  --db-surface: #26221b;
+  --db-surface-soft: #2e2921;
+  --db-surface-raised: #2a251d;
+  --db-line: rgba(214, 196, 160, 0.18);
+  --db-line-strong: rgba(214, 196, 160, 0.32);
+  --db-text: #eae2d2;
+  --db-muted: #a2977f;
+  --db-muted-strong: #c8bda3;
+  --db-accent: #d8a558;
+  --db-accent-strong: #e6bc72;
+  --db-accent-soft: rgba(216, 165, 88, 0.16);
+  --db-warn: #dcae62;
+  --db-danger: #d97b6c;
+  --db-danger-soft: rgba(217, 123, 108, 0.14);
+  --db-danger-ink: #e39181;
+  --db-shadow: rgba(0, 0, 0, 0.5);
+}
+/* ---------- 基础重置与正文 ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+p, h1, h2, h3, h4 { margin: 0; }
+ul { margin: 0; padding: 0; list-style: none; }
+h1, h2, h3, h4 { font-family: var(--db-font-heading); font-weight: 700; color: var(--db-text); }
+
+body {
+  margin: 0;
+  background: var(--db-bg);
+  color: var(--db-text);
+  font-family: var(--db-font-body);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+a { color: var(--db-accent); transition: color var(--db-speed) ease; }
+::selection { background: var(--db-accent); color: var(--db-bg); }
+summary { list-style: none; cursor: pointer; }
+summary::-webkit-details-marker { display: none; }
+.muted { color: var(--db-muted); }
+/* ---------- 页头:报头 masthead ---------- */
+.app-header { background: var(--db-bg); border-top: 4px solid var(--db-text); border-bottom: 3px double var(--db-line-strong); }
+
+.header-inner {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 22px 28px 18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.brand { min-width: 0; }
+
+.brand-name {
+  font-family: var(--db-font-heading);
+  font-size: 12px;
+  letter-spacing: 0.42em;
+  color: var(--db-accent-strong);
+  margin-bottom: 6px;
+}
+
+h1 { font-size: 27px; line-height: 1.25; letter-spacing: 0.01em; }
+
+.header-copy {
+  margin-top: 8px;
+  font-family: var(--db-font-heading);
+  font-style: italic;
+  font-size: 13.5px;
+  color: var(--db-muted);
+  max-width: 56ch;
+}
+
+.status-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-bottom: 4px; }
+
+/* 印章感:无底色、细边、小型大写 */
+.status-chip {
+  border: 1px solid var(--db-line-strong);
+  border-radius: var(--db-radius-s);
+  padding: 4px 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--db-muted-strong);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: transparent;
+}
+/* ---------- 三栏布局与面板 ---------- */
+.workspace {
+  max-width: 1480px;
+  margin: 26px auto 0;
+  padding: 0 28px;
+  display: grid;
+  grid-template-columns: minmax(270px, 320px) minmax(470px, 1fr) minmax(360px, 440px);
+  gap: 22px;
+}
+
+.panel {
+  background: var(--db-surface);
+  border: 1px solid var(--db-line-strong);
+  border-radius: var(--db-radius-m);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 18px;
+  border-bottom: 3px double var(--db-line-strong);
+}
+
+.panel-title { min-width: 0; }
+h2 { font-size: 17px; letter-spacing: 0.02em; }
+.panel-title .muted { margin-top: 3px; font-size: 12px; }
+.panel-body { padding: 16px 18px 18px; min-width: 0; }
+.sidebar-body { display: flex; flex-direction: column; gap: 16px; }
+.analysis-stack { display: flex; flex-direction: column; gap: 18px; }
+/* ---------- 表单元素:纸面内嵌,印刷不发光 ---------- */
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.session-form { padding-bottom: 16px; border-bottom: 1px dotted var(--db-line-strong); }
+.field { display: flex; flex-direction: column; gap: 6px; }
+label { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; color: var(--db-muted-strong); }
+
+input, textarea {
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  line-height: 1.55;
+  color: var(--db-text);
+  background: var(--db-surface);
+  border: 1px solid var(--db-line);
+  border-radius: var(--db-radius-s);
+  transition: border-color var(--db-speed) ease, background-color var(--db-speed) ease;
+}
+
+textarea { min-height: 88px; resize: vertical; }
+input::placeholder, textarea::placeholder { color: var(--db-muted); opacity: 1; }
+input:hover, textarea:hover { border-color: var(--db-line-strong); }
+
+input:focus-visible, textarea:focus-visible { outline: none; border-color: var(--db-accent); background: var(--db-surface-raised); }
+
+input:active, textarea:active { border-color: var(--db-accent); }
+input:disabled, textarea:disabled { opacity: 0.5; background: var(--db-surface-soft); cursor: not-allowed; }
+.helper { font-size: 11.5px; line-height: 1.5; color: var(--db-muted); }
+.form-actions { display: flex; justify-content: flex-end; gap: 8px; }
+/* ---------- 按钮:编辑部的主按钮是墨 ---------- */
+button {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 16px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--db-bg);
+  background: var(--db-text);
+  border: 1px solid var(--db-text);
+  border-radius: var(--db-radius-s);
+  cursor: pointer;
+  transition: background-color var(--db-speed) ease, color var(--db-speed) ease, border-color var(--db-speed) ease;
+}
+
+button:hover { background: var(--db-accent); border-color: var(--db-accent); color: var(--db-bg); }
+button:active { background: var(--db-accent-strong); border-color: var(--db-accent-strong); color: var(--db-bg); }
+button:focus-visible { outline: 2px dotted var(--db-accent); outline-offset: 2px; }
+
+/* 静态复刻主按钮 :hover */
+button.demo-hover { background: var(--db-accent); border-color: var(--db-accent); color: var(--db-bg); }
+
+button.secondary { background: transparent; border-color: var(--db-line-strong); color: var(--db-text); }
+button.secondary:hover { background: transparent; border-color: var(--db-accent); color: var(--db-accent-strong); }
+button.secondary:active { background: var(--db-accent-soft); border-color: var(--db-accent); color: var(--db-accent-strong); }
+
+button.danger { background: transparent; border-color: var(--db-danger); color: var(--db-danger); }
+button.danger:hover { background: var(--db-danger-soft); border-color: var(--db-danger); color: var(--db-danger-ink); }
+button.danger:active { background: var(--db-danger); border-color: var(--db-danger); color: var(--db-bg); }
+
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* 加载中:呼吸式降透明,不转圈不发光 */
+button.busy { opacity: 1; cursor: progress; animation: db-busy-breathe 1.6s ease-in-out infinite; }
+
+@keyframes db-busy-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.9; }
+}
+/* ---------- 会话栏:目录条目 ---------- */
+.session-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--db-line);
+  border-radius: var(--db-radius-s);
+  background: var(--db-surface);
+  overflow: hidden;
+}
+
+.session-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 5px;
+  width: 100%;
+  padding: 10px 12px 10px 11px;
+  font: inherit;
+  letter-spacing: normal;
+  text-align: left;
+  color: var(--db-text);
+  background: transparent;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  cursor: pointer;
+  transition: background-color var(--db-speed) ease, border-color var(--db-speed) ease;
+}
+
+.session-item + .session-item { border-top: 1px solid var(--db-line); }
+.session-item strong { font-family: var(--db-font-heading); font-size: 14px; font-weight: 600; }
+.session-item:hover { background: var(--db-surface-soft); border-color: transparent; color: var(--db-text); }
+.session-item:active { background: var(--db-accent-soft); }
+.session-item:focus-visible { outline: 2px dotted var(--db-accent); outline-offset: -3px; }
+.session-item.active { background: var(--db-accent-soft); border-left-color: var(--db-accent); }
+.session-item.active strong { color: var(--db-accent-strong); }
+
+.session-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: var(--db-font-mono);
+  font-size: 11px;
+  color: var(--db-muted-strong);
+  font-variant-numeric: tabular-nums;
+}
+/* ---------- LLM 设置:档案夹 disclosure ---------- */
+.disclosure { border: 1px solid var(--db-line); border-radius: var(--db-radius-s); background: var(--db-surface); }
+
+.disclosure-summary {
+  display: block;
+  position: relative;
+  padding: 10px 36px 10px 12px;
+  transition: background-color var(--db-speed) ease;
+}
+
+.disclosure-summary::after {
+  content: "+";
+  position: absolute;
+  top: 9px;
+  right: 12px;
+  font-family: var(--db-font-heading);
+  font-size: 15px;
+  line-height: 1;
+  color: var(--db-muted);
+}
+
+.disclosure[open] .disclosure-summary::after { content: "\2212"; color: var(--db-accent-strong); }
+.disclosure-summary:hover { background: var(--db-surface-soft); }
+.disclosure-summary:active { background: var(--db-accent-soft); }
+.disclosure-summary:focus-visible { outline: 2px dotted var(--db-accent); outline-offset: -3px; }
+
+.summary-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.settings-title-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.settings-title-row strong { font-family: var(--db-font-heading); font-size: 13.5px; }
+
+.summary-action {
+  font-size: 12px;
+  color: var(--db-accent);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+
+.disclosure-summary:hover .summary-action { color: var(--db-accent-strong); }
+.summary-status { font-size: 12px; color: var(--db-muted-strong); font-variant-numeric: tabular-nums; }
+.disclosure-body { margin: 0 12px 12px; padding-top: 10px; border-top: 1px dotted var(--db-line); }
+.privacy-note { font-size: 12px; color: var(--db-muted); }
+.privacy-note::before { content: "\203B\2002"; color: var(--db-accent); }
+/* ---------- 通知:便签与批注的分级 ---------- */
+.notice {
+  padding: 8px 12px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--db-muted-strong);
+  background: var(--db-surface-soft);
+  border: 1px solid var(--db-line);
+  border-left: 3px solid var(--db-line-strong);
+  border-radius: var(--db-radius-s);
+}
+
+.notice.error { color: var(--db-danger-ink); background: var(--db-danger-soft); border-color: var(--db-danger); }
+/* ---------- 报告:一张可署名的研究稿 ---------- */
+.report {
+  background: var(--db-surface-raised);
+  border: 1px solid var(--db-line);
+  border-radius: var(--db-radius-s);
+  padding: 22px 24px;
+  max-height: min(54vh, 540px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--db-line-strong) transparent;
+}
+
+.markdown-content { font-family: var(--db-font-heading); font-size: 15px; line-height: 1.75; color: var(--db-text); }
+.markdown-content h1 { font-size: 24px; line-height: 1.3; letter-spacing: 0.01em; margin: 0 0 6px; }
+
+/* 标题后的第一段当署名行/刊头信息处理 */
+.markdown-content h1 + p {
+  font-family: var(--db-font-body);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--db-muted-strong);
+  margin: 0 0 14px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--db-line);
+}
+
+.markdown-content h2 {
+  position: relative;
+  font-size: 18px;
+  letter-spacing: 0.02em;
+  margin: 26px 0 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--db-line-strong);
+}
+
+.markdown-content h2::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 34px;
+  border-top: 3px solid var(--db-accent);
+}
+
+.markdown-content p { margin: 0 0 12px; }
+.markdown-content ul { margin: 6px 0 16px; padding-left: 1.3em; list-style-type: "\2013\2002"; font-variant-numeric: tabular-nums; }
+.markdown-content li { margin: 3px 0; }
+.markdown-content li::marker { color: var(--db-muted); }
+
+.markdown-content a {
+  color: var(--db-accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--db-line-strong);
+  text-underline-offset: 3px;
+}
+
+.markdown-content a:hover { color: var(--db-accent-strong); text-decoration-color: var(--db-accent-strong); }
+.markdown-content a:focus-visible { outline: 1px dotted var(--db-accent); outline-offset: 2px; }
+.markdown-content strong { font-weight: 700; color: var(--db-text); }
+.markdown-content > :last-child { margin-bottom: 0; }
+
+/* 价格口径说明 = 档案批注 */
+.report-notice {
+  margin: 14px 0 18px;
+  padding: 10px 14px;
+  background: var(--db-accent-soft);
+  border-left: 3px solid var(--db-accent);
+  border-radius: var(--db-radius-s);
+  font-family: var(--db-font-heading);
+  font-style: italic;
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--db-muted-strong);
+}
+/* ---------- 对话:往来信件 ---------- */
+.conversation { border-top: 3px double var(--db-line); padding-top: 16px; }
+.messages { display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+.message { padding: 10px 12px; border-radius: var(--db-radius-s); }
+.message.user { background: var(--db-surface-soft); border: 1px solid var(--db-line-strong); margin-left: 28px; }
+.message.assistant { background: var(--db-surface); border: 1px solid var(--db-line); }
+
+.message-role {
+  font-family: var(--db-font-body);
+  font-size: 10.5px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--db-muted-strong);
+  margin-bottom: 6px;
+}
+
+.message.assistant .message-role { color: var(--db-accent-strong); }
+.message .markdown-content { font-size: 14px; line-height: 1.65; }
+.message .markdown-content p { margin-bottom: 8px; }
+.message .markdown-content ul { margin: 6px 0 8px; }
+
+.chat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px dotted var(--db-line-strong);
+}
+
+.chat-form textarea { min-height: 68px; }
+/* ---------- 商品栏:证据卡片 ---------- */
+.products-panel { min-width: 0; }
+.products-panel .panel-body { padding: 14px; }
+
+.offer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: min(72vh, 760px);
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--db-line-strong) transparent;
+}
+
+.offer-card { background: var(--db-surface-raised); border: 1px solid var(--db-line); border-radius: var(--db-radius-s); }
+.offer-card[open] { border-color: var(--db-line-strong); }
+
+.offer-summary {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 34px 12px 14px;
+  transition: background-color var(--db-speed) ease;
+}
+
+.offer-summary::after {
+  content: "+";
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-family: var(--db-font-heading);
+  font-size: 16px;
+  line-height: 1;
+  color: var(--db-muted);
+}
+
+.offer-card[open] .offer-summary::after { content: "\2212"; color: var(--db-accent-strong); }
+.offer-summary:hover { background: var(--db-surface-soft); }
+.offer-summary:active { background: var(--db-accent-soft); }
+.offer-summary:focus-visible { outline: 2px dotted var(--db-accent); outline-offset: -3px; }
+
+.offer-headline { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+
+.offer-headline a {
+  font-family: var(--db-font-heading);
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--db-text);
+  text-decoration: none;
+}
+
+.offer-headline a:hover {
+  color: var(--db-accent-strong);
+  text-decoration: underline;
+  text-decoration-color: var(--db-accent);
+  text-underline-offset: 3px;
+}
+
+.offer-headline a:focus-visible { outline: 1px dotted var(--db-accent); outline-offset: 2px; }
+.offer-headline .muted { font-size: 12px; }
+.offer-meta { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.meta-pill {
+  border: 1px solid var(--db-line-strong);
+  border-radius: var(--db-radius-s);
+  padding: 2px 8px;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--db-muted-strong);
+  font-variant-numeric: tabular-nums;
+  background: transparent;
+}
+
+/* 价格像手写标注:琥珀墨 + 衬线加重 */
+.meta-pill.price {
+  font-family: var(--db-font-heading);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--db-warn);
+  border-color: var(--db-warn);
+}
+
+.offer-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--db-line);
+}
+
+.offer-insight {
+  font-family: var(--db-font-heading);
+  font-style: italic;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--db-muted-strong);
+}
+
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); column-gap: 18px; row-gap: 1px; }
+.detail-item { display: flex; flex-direction: column; gap: 1px; padding: 5px 0; border-bottom: 1px dotted var(--db-line); min-width: 0; }
+.detail-label { font-size: 10.5px; letter-spacing: 0.07em; text-transform: uppercase; color: var(--db-muted); }
+.detail-value { font-size: 13px; color: var(--db-text); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+
+.detail-section { margin-top: 2px; }
+h4 { font-size: 13px; letter-spacing: 0.04em; }
+.detail-section h4 { margin-bottom: 4px; }
+.detail-section h4::before { content: "\00A7\2002"; color: var(--db-accent); }
+.inline-actions { display: flex; gap: 8px; padding-top: 4px; }
+/* ---------- 样张区:校样附页,与工作台隔开 ---------- */
+.component-samples { max-width: 1480px; margin: 44px auto 56px; padding: 0 28px; }
+
+.samples-banner {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  color: var(--db-muted-strong);
+  padding: 10px 12px;
+  margin-bottom: 20px;
+  border-top: 3px double var(--db-line-strong);
+  border-bottom: 1px solid var(--db-line);
+}
+
+.samples-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 18px; }
+
+.sample-block {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: var(--db-surface);
+  border: 1px solid var(--db-line);
+  border-radius: var(--db-radius-m);
+}
+
+h3 { font-size: 14px; letter-spacing: 0.03em; }
+.sample-block h3 { padding-bottom: 8px; border-bottom: 1px solid var(--db-line); }
+.sample-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* 唯一允许的投影:确认卡浮在纸面上 */
+.confirm-card {
+  background: var(--db-surface-raised);
+  border: 1px solid var(--db-line-strong);
+  border-radius: var(--db-radius-m);
+  padding: 16px;
+  box-shadow: 0 10px 26px var(--db-shadow);
+}
+
+.confirm-title { font-family: var(--db-font-heading); font-size: 15.5px; font-weight: 700; margin-bottom: 6px; }
+.confirm-copy { font-size: 13px; line-height: 1.6; color: var(--db-muted-strong); margin-bottom: 14px; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 30px 20px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--db-muted);
+  border: 1px dashed var(--db-line-strong);
+  border-radius: var(--db-radius-s);
+  background: transparent;
+}
+
+.empty-state.compact { padding: 18px 16px; font-size: 12.5px; }
+.empty-title { font-family: var(--db-font-heading); font-size: 15px; font-weight: 700; color: var(--db-text); margin-bottom: 4px; }
+/* ---------- 断点:1260 降两栏,860 降单栏 ---------- */
+@media (max-width: 1260px) {
+  .workspace { grid-template-columns: minmax(270px, 340px) minmax(0, 1fr); }
+  .products-panel { grid-column: 1 / -1; }
+  .offer-list { max-height: none; }
+}
+
+@media (max-width: 860px) {
+  .workspace { grid-template-columns: minmax(0, 1fr); padding: 0 16px; gap: 18px; }
+  .header-inner { flex-direction: column; align-items: flex-start; gap: 14px; padding: 18px 16px 14px; }
+  .status-row { padding-bottom: 0; }
+  .report { max-height: none; padding: 18px 16px; }
+  .message.user { margin-left: 12px; }
+  .component-samples { padding: 0 16px; }
+}
+/* ---------- 动效偏好:印刷品本来就不动 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
+  button.busy { animation: none; opacity: 0.65; }
+}
+
+</style>
+</head>
+<body>
+<div class="mockup-banner">
+  <strong>方向 3 · 纸感编辑部风</strong>
+  <span class="mb-tag">衬线标题墨色正文,一份可以署名的选品研究报告</span>
+  <button type="button" class="mb-toggle">切换亮 / 暗</button>
+</div>
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <p class="brand-name">购物搭子</p>
+      <h1>DealBuddy 工作台</h1>
+      <p class="header-copy">
+        本地采集商品、整理规格、生成报告，并在需要时接入你选择的 LLM。
+      </p>
+    </div>
+    <div class="status-row" aria-label="服务状态">
+      <span class="status-chip" id="service-status">服务正常</span>
+      <span class="status-chip" id="current-status">当前会话：a1b2c3d4e5f6</span>
+      <span class="status-chip" id="llm-status">LLM：已配置</span>
+    </div>
+  </div>
+</header>
+
+<main class="workspace">
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2>会话</h2>
+        <p class="muted">扩展会把商品投递到当前会话。</p>
+      </div>
+      <button class="secondary" type="button">刷新</button>
+    </div>
+    <div class="panel-body sidebar-body">
+      <form class="stack session-form">
+        <div class="field">
+          <label for="category-input">品类</label>
+          <input id="category-input" placeholder="电视 / 扫地机器人 / 手机" />
+        </div>
+        <div class="field">
+          <label for="request-input">原始需求</label>
+          <textarea id="request-input" placeholder="预算5000以内，65英寸，主要看电影"></textarea>
+          <p class="helper">用于生成报告上下文，也可以在追问区继续细化。</p>
+        </div>
+        <div class="form-actions">
+          <button type="submit">新建会话</button>
+        </div>
+      </form>
+      <div class="session-list">
+        <button type="button" class="session-item active">
+          <strong>降噪耳机</strong>
+          <span class="session-meta">
+            <span>a1b2c3d4e5f6</span>
+            <span>v2</span>
+          </span>
+        </button>
+        <button type="button" class="session-item">
+          <strong>机械键盘</strong>
+          <span class="session-meta">
+            <span>f6e5d4c3b2a1</span>
+            <span>v1</span>
+          </span>
+        </button>
+      </div>
+
+      <details class="disclosure llm-disclosure">
+        <summary class="disclosure-summary llm-summary">
+          <span class="summary-copy">
+            <span class="settings-title-row">
+              <strong>LLM Provider</strong>
+              <span class="summary-action">设置</span>
+            </span>
+            <span class="summary-status">已配置：openai-compatible / kimi-k3</span>
+          </span>
+        </summary>
+        <div class="disclosure-body llm-body">
+          <p class="privacy-note">默认仅本地分析</p>
+        </div>
+      </details>
+
+      <div class="notice" id="page-message">已切换到会话 a1b2c3d4e5f6。</div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2>分析与追问</h2>
+        <p class="muted">报告和对话都保存在当前会话中。</p>
+      </div>
+      <button class="secondary" type="button">重新生成</button>
+    </div>
+    <div class="panel-body analysis-stack">
+      <div class="report markdown-content">
+        <h1>DealBuddy 选品报告：降噪耳机</h1>
+        <p>需求版本：v2</p>
+        <div class="report-notice">
+          价格来自页面可见信息。估算应付只计算页面明确展示且可直接解析的优惠，不代表结算价格。
+        </div>
+        <h2>最符合需求</h2>
+        <ul>
+          <li>商品：<a href="#">声阔 Space One Pro 头戴式主动降噪耳机 蓝牙5.4</a></li>
+          <li>平台：tmall</li>
+          <li>店铺：声阔官方旗舰店</li>
+          <li>匹配分：31.50</li>
+          <li>SKU：曜石黑 / 官方标配</li>
+          <li>页面展示价：¥1099.00</li>
+          <li>估算应付：¥999.00</li>
+          <li>优劣短评：降噪深度和佩戴舒适度突出，但折叠体积偏大。</li>
+          <li>复核时间：2026-08-10T14:22:31+00:00</li>
+          <li>数据可信度：high</li>
+        </ul>
+        <h2>最低预算</h2>
+        <ul>
+          <li>商品：<a href="#">Redmi Buds 6 Pro 真无线降噪耳机</a></li>
+          <li>平台：jd</li>
+          <li>店铺：小米京东自营旗舰店</li>
+          <li>页面展示价：¥379.00</li>
+          <li>估算应付：¥349.00</li>
+          <li>优劣短评：预算内降噪表现均衡，通话拾音一般。</li>
+        </ul>
+        <h2>综合性价比</h2>
+        <ul>
+          <li>商品：<a href="#">索尼 WH-CH720N 头戴式无线降噪耳机</a></li>
+          <li>平台：tmall</li>
+          <li>店铺：索尼官方旗舰店</li>
+          <li>页面展示价：¥699.00</li>
+          <li>估算应付：¥649.00</li>
+          <li>优劣短评：轻量佩戴与续航是强项，降噪深度弱于头部机型。</li>
+        </ul>
+        <h2>值得加预算</h2>
+        <ul>
+          <li>商品：<a href="#">华为 FreeBuds Pro 4 真无线降噪耳机</a></li>
+          <li>平台：jd</li>
+          <li>店铺：华为京东自营官方旗舰店</li>
+          <li>页面展示价：¥1199.00</li>
+          <li>估算应付：¥1149.00</li>
+          <li>优劣短评：多设备协同和通话降噪领先，但价格接近预算上限。</li>
+        </ul>
+      </div>
+      <div class="conversation">
+        <div class="messages">
+          <div class="message user">
+            <div class="message-role">user</div>
+            <div class="markdown-content">预算 1500 以内，通勤地铁降噪优先，偶尔要接电话，头戴入耳都行。</div>
+          </div>
+          <div class="message assistant">
+            <div class="message-role">assistant / kimi-k3</div>
+            <div class="markdown-content">
+              <p>按你的通勤优先级，两条主线：</p>
+              <ul>
+                <li><strong>头戴优先</strong>：声阔 Space One Pro 的降噪深度在四款里最好，地铁低频噪音压制明显，缺点是夏天佩戴偏热。</li>
+                <li><strong>便携优先</strong>：华为 FreeBuds Pro 4 通话降噪最稳，适合经常接电话的场景。</li>
+              </ul>
+              <p>如果预算想留余量，索尼 WH-CH720N 估算应付 ¥649，是舒适度和价格的折中。需要我按「通话质量」再拉一次对比吗？</p>
+            </div>
+          </div>
+        </div>
+        <form class="chat-form">
+          <div class="field">
+            <label for="chat-input">追问当前会话</label>
+            <textarea id="chat-input" placeholder="例如：这几款里哪一款更适合电影和游戏？"></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit">发送</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel products-panel">
+    <div class="panel-head">
+      <div class="panel-title">
+        <h2>商品列表</h2>
+        <p class="muted">展开卡片查看完整文本，复制为 Markdown。</p>
+      </div>
+      <span class="status-chip">4 个商品</span>
+    </div>
+    <div class="panel-body">
+      <div class="offer-list">
+        <details class="offer-card" open>
+          <summary class="offer-summary">
+            <span class="offer-headline">
+              <a href="#">声阔 Space One Pro 头戴式主动降噪耳机 蓝牙5.4 自适应降噪</a>
+              <span class="muted">声阔官方旗舰店</span>
+            </span>
+            <span class="offer-meta">
+              <span class="meta-pill">tmall</span>
+              <span class="meta-pill price">¥1099.00</span>
+              <span class="meta-pill">SKU 曜石黑 / 官方标配</span>
+            </span>
+          </summary>
+          <div class="offer-body">
+            <div class="offer-insight">优劣短评：降噪深度和佩戴舒适度突出，但折叠体积偏大。</div>
+            <div class="detail-grid">
+              <div class="detail-item"><span class="detail-label">平台</span><span class="detail-value">tmall</span></div>
+              <div class="detail-item"><span class="detail-label">店铺</span><span class="detail-value">声阔官方旗舰店</span></div>
+              <div class="detail-item"><span class="detail-label">品牌</span><span class="detail-value">声阔 soundcore</span></div>
+              <div class="detail-item"><span class="detail-label">型号</span><span class="detail-value">Space One Pro</span></div>
+              <div class="detail-item"><span class="detail-label">SKU</span><span class="detail-value">曜石黑 / 官方标配</span></div>
+              <div class="detail-item"><span class="detail-label">页面展示价</span><span class="detail-value">¥1099.00</span></div>
+              <div class="detail-item"><span class="detail-label">估算应付</span><span class="detail-value">¥999.00</span></div>
+              <div class="detail-item"><span class="detail-label">标价</span><span class="detail-value">¥1299.00</span></div>
+              <div class="detail-item"><span class="detail-label">优惠</span><span class="detail-value">店铺券 ¥100</span></div>
+              <div class="detail-item"><span class="detail-label">优惠条件</span><span class="detail-value">满 ¥1000 可用</span></div>
+              <div class="detail-item"><span class="detail-label">库存</span><span class="detail-value">现货</span></div>
+              <div class="detail-item"><span class="detail-label">可信度</span><span class="detail-value">high</span></div>
+              <div class="detail-item"><span class="detail-label">复核时间</span><span class="detail-value">2026-08-10T14:22:31+00:00</span></div>
+              <div class="detail-item"><span class="detail-label">链接</span><span class="detail-value">https://detail.example.com/item/100234</span></div>
+            </div>
+            <div class="detail-section">
+              <h4>规格</h4>
+              <div class="detail-grid">
+                <div class="detail-item"><span class="detail-label">蓝牙版本</span><span class="detail-value">5.4</span></div>
+                <div class="detail-item"><span class="detail-label">续航</span><span class="detail-value">降噪开 40h / 关 60h</span></div>
+                <div class="detail-item"><span class="detail-label">重量</span><span class="detail-value">280g</span></div>
+                <div class="detail-item"><span class="detail-label">快充</span><span class="detail-value">充 5 分钟听 4 小时</span></div>
+              </div>
+            </div>
+            <div class="inline-actions">
+              <button class="secondary" type="button">复制 Markdown</button>
+              <button class="danger" type="button">删除</button>
+            </div>
+          </div>
+        </details>
+
+        <details class="offer-card">
+          <summary class="offer-summary">
+            <span class="offer-headline">
+              <a href="#">Redmi Buds 6 Pro 真无线降噪耳机 55dB 深度降噪</a>
+              <span class="muted">小米京东自营旗舰店</span>
+            </span>
+            <span class="offer-meta">
+              <span class="meta-pill">jd</span>
+              <span class="meta-pill price">¥379.00</span>
+              <span class="meta-pill">SKU 晨雾白</span>
+            </span>
+          </summary>
+        </details>
+
+        <details class="offer-card">
+          <summary class="offer-summary">
+            <span class="offer-headline">
+              <a href="#">华为 FreeBuds Pro 4 真无线降噪耳机 星闪连接</a>
+              <span class="muted">华为京东自营官方旗舰店</span>
+            </span>
+            <span class="offer-meta">
+              <span class="meta-pill">jd</span>
+              <span class="meta-pill price">¥1199.00</span>
+              <span class="meta-pill">SKU 雅川青</span>
+            </span>
+          </summary>
+        </details>
+
+        <details class="offer-card">
+          <summary class="offer-summary">
+            <span class="offer-headline">
+              <a href="#">索尼 WH-CH720N 头戴式无线降噪耳机 轻量长续航</a>
+              <span class="muted">索尼官方旗舰店</span>
+            </span>
+            <span class="offer-meta">
+              <span class="meta-pill">tmall</span>
+              <span class="meta-pill price">¥699.00</span>
+              <span class="meta-pill">SKU 蓝色</span>
+            </span>
+          </summary>
+        </details>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="component-samples" aria-label="组件状态样张">
+  <div class="samples-banner">组件状态样张 · 仅供方向评审，不属于工作台页面</div>
+  <div class="samples-grid">
+    <div class="sample-block">
+      <h3>按钮状态</h3>
+      <div class="sample-row">
+        <button type="button">默认</button>
+        <button type="button" class="demo-hover">悬停</button>
+        <button type="button" disabled>禁用</button>
+        <button type="button" class="busy" disabled>生成中…</button>
+      </div>
+      <div class="sample-row">
+        <button type="button" class="secondary">次要按钮</button>
+        <button type="button" class="danger">删除</button>
+      </div>
+    </div>
+    <div class="sample-block">
+      <h3>消息提示</h3>
+      <div class="notice">已复制商品 Markdown。</div>
+      <div class="notice error">投递失败：无法连接本地服务，请确认 dealbuddy web 正在运行。</div>
+    </div>
+    <div class="sample-block">
+      <h3>危险操作确认</h3>
+      <div class="confirm-card">
+        <p class="confirm-title">删除这个商品？</p>
+        <p class="confirm-copy">「Redmi Buds 6 Pro 真无线降噪耳机」将从当前会话移除，报告会重新生成。</p>
+        <div class="confirm-actions">
+          <button type="button" class="secondary">取消</button>
+          <button type="button" class="danger">删除</button>
+        </div>
+      </div>
+    </div>
+    <div class="sample-block">
+      <h3>空状态</h3>
+      <div class="empty-state compact">
+        <div>
+          <div class="empty-title">还没有会话</div>
+          <div>先输入品类和需求，再用浏览器扩展采集商品。</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+
+document.querySelector('.mb-toggle').addEventListener('click', () => {
+  const el = document.documentElement;
+  el.dataset.theme = el.dataset.theme === 'dark' ? 'light' : 'dark';
+});
+
+</script>
+</body>
+</html>
