@@ -13,8 +13,12 @@ token 规范见 [../../tokens.md](../../tokens.md)。
 
 ## 说明
 
-- 骨架结构与线上工作台(`src/dealbuddy/static/index.html`)的 class 体系一一对应,
-  内容为自拟仿真数据(降噪耳机会话),不含真实采集数据。
+- 骨架的主界面区块(头部/三栏/商品卡/报告/对话/表单)与线上工作台
+  (`src/dealbuddy/static/index.html`)的 class 一一对应,内容为自拟仿真数据
+  (降噪耳机会话),不含真实采集数据。**例外**:左栏 LLM 设置表单在 mockup 中简化为
+  一条摘要,其完整表单类(`toggle-row` / `field-grid` / `provider-grid` / `wide`)
+  未在 mockup CSS 中覆盖——该区域已决定在 X8 轮重做为独立弹窗,V2 换肤时先给这些类
+  从简的过渡样式。
 - 每稿覆盖统一验收清单:三栏全区块、含「估算应付」的商品卡、报告排版、对话气泡、
   按钮四态、消息提示分级、删除确认、空状态。
 - mockup 中的动效仅文字标注,未实现;`prefers-reduced-motion` 与两档窄幅断点已含。

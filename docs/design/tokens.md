@@ -3,9 +3,12 @@
 方向:**柔和亲和风**(2026-08 V1 轮选定,见 [direction.md](direction.md))。
 本文件是三套 UI(Web 工作台 / 插件 popup / 采集页浮层)的 token 唯一规范。
 
-**值的机器真相**:V3 轮前以 `src/dealbuddy/static/index.html` 的 `:root` 块为准;
-V3 轮起以 `extension/dealbuddy-capture/tokens.css` 为准,工作台手抄同步,
-一致性由 `tests/extension/design-tokens-sync.test.cjs` 断言(该测试随 V3 落地)。
+**值的机器真相(按迭代阶段)**:
+- **V2 换肤落地前:本文件即真相**(`index.html` 此时仍是旧 Data-Dense Dashboard 变量,
+  无 `--db-*` 块);
+- V2 起:`src/dealbuddy/static/index.html` 的 `:root` 块;
+- V3 起:`extension/dealbuddy-capture/tokens.css`,工作台手抄同步,一致性由
+  `tests/extension/design-tokens-sync.test.cjs` 断言(该测试随 V3 落地)。
 
 变量统一 `--db-` 前缀。亮色定义在 `:root`,暗色覆盖同名变量
 (工作台:`@media (prefers-color-scheme: dark)` 与 `[data-theme="dark"]` 双挂;
@@ -42,9 +45,18 @@ V3 轮起以 `extension/dealbuddy-capture/tokens.css` 为准,工作台手抄同�
 
 语义纪律:
 
-- **价格永远走琥珀族**(`--db-warn*`),与主色橘区分;「估算应付」文案纪律见 CLAUDE.md。
+- **价格永远走琥珀族**(`--db-warn*`),与主色橘区分;「估算应付」文案纪律见
+  [docs/brand/README.md](../brand/README.md) 文案语气节。
 - 危险操作(删除)走 `--db-danger*`,默认淡底,hover 才加深。
 - 暗色是「深夜暖灯书房」:任何新暗色值不得偏冷(禁蓝灰)。
+
+已知对比度例外(2026-08-12 用户决策:气质优先,维持现状;A1 无障碍专项轮复审):
+
+- 亮色主按钮:`--db-on-accent #fffdf9` on `--db-accent #d97757` ≈ 3.07:1
+  (hover ≈ 4.10:1),按「按钮等大字重组件 ≥3:1」线通过,不满足正文 4.5:1。
+- 亮色 `--db-muted #8f8577` on 白面板 ≈ 3.6:1,用于 13px 次要文字时低于 4.5:1
+  (曾评估加深至 `#7a7060` ≈ 4.8:1,未采纳)。
+- 暗色套与价格贴纸(`--db-warn-strong` on `--db-warn-soft` ≈ 5.0:1)均达标,无例外。
 
 ## 圆角
 
