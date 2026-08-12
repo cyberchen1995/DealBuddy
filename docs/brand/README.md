@@ -22,11 +22,17 @@ Logo 避免购物车、优惠券、价格标签等促销符号，改用「商品
 
 ## 色彩
 
+品牌标识色(logo、商店素材等品牌资产用色):
+
 - ink: `#172033`
 - deep slate: `#0F172A`
 - trust blue: `#2563EB`
 - signal cyan: `#22D3EE`
 - decision amber: `#FBBF24`
+
+产品界面(工作台、扩展 popup、采集浮层)不使用上表,统一以
+[docs/design/tokens.md](../design/tokens.md) 的 `--db-*` token 为唯一色板
+(2026-08 起,方向为「柔和亲和风」,见 [docs/design/direction.md](../design/direction.md))。
 
 ## 文案语气
 

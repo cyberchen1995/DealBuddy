@@ -2,6 +2,24 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## [0.3.1] - 2026-08-12
+
+### Added
+
+- 选定统一视觉方向「**柔和亲和风**」并沉淀设计规范（本版仅文档与设计资产，界面代码未动，
+  换肤在后续版本落地）：
+  - `docs/design/tokens.md`：三套 UI（工作台 / 扩展 popup / 采集浮层）共用的 `--db-*`
+    design token 规范——色板明暗两套、圆角、间距梯度、字号字重、阴影三级、动效与 z-index。
+  - `docs/design/direction.md`：方向定义、do/don't、六个候选方向的落选理由。
+  - `docs/design/explorations/2026-08-r1/`：六个方向的可交互 mockup 存档（亮/暗可切换，
+    含组件状态样张），作为决策证据与后续换肤底稿。
+
+### Changed
+
+- `docs/brand/README.md` 色彩节拆分为「品牌标识色」与「产品界面色板」：界面色以
+  `docs/design/tokens.md` 为唯一来源，终结品牌文档 / CHANGELOG / 工作台 / popup 四处
+  色值互不一致的状态。
+
 ## [0.3.0] - 2026-07-14
 
 ### Fixed
