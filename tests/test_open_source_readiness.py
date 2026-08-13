@@ -39,11 +39,12 @@ def test_gitignore_keeps_public_project_assets_trackable() -> None:
 def test_readme_presents_web_as_primary_entrypoint() -> None:
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
 
-    assert "本地购物研究工具" in readme
     assert "DealBuddy 购物搭子" in readme
+    assert "本地工作台" in readme
     assert 'src="docs/brand/dealbuddy-logo.svg"' in readme
     assert "uv run dealbuddy web --port 8765" in readme
-    assert readme.index("uv run dealbuddy web --port 8765") < readme.index("## 工作流")
+    # web 工作台是第一入口:启动命令必须在「快速开始」出现,先于开发章节
+    assert readme.index("uv run dealbuddy web --port 8765") < readme.index("## 开发")
     assert "旧的" not in readme
     assert "仍旧" not in readme
     assert "仍然" not in readme

@@ -14,9 +14,25 @@ Web 服务负责保存会话、接收扩展投递、生成报告，并暴露本�
 
 ## Workflow
 
+### 0. First-Time Setup(仅首次)
+
+用户机器上还没有 DealBuddy 时，按以下顺序安装（环境要求：Python >=3.12、uv、本机 Chrome）：
+
+```bash
+git clone https://github.com/cyberchen1995/DealBuddy.git
+cd DealBuddy
+uv sync
+```
+
+扩展从 https://github.com/cyberchen1995/DealBuddy/releases/latest 下载
+`dealbuddy-capture` zip 并解压。**加载扩展必须由用户在浏览器里手动完成**：
+告知用户解压目录路径，请用户打开 `chrome://extensions`、开启「开发者模式」、
+用「加载已解压的扩展程序」指向该目录。agent 不代替用户操作浏览器。
+
 ### 1. Ensure Web Server
 
-确认本地 Web 服务可用。需要启动时，在项目根目录运行：
+确认本地 Web 服务可用（`GET http://127.0.0.1:8765/api/health` 返回 ok 即在运行）。
+需要启动时，在项目根目录运行并保持进程存活：
 
 ```bash
 uv run dealbuddy web --port 8765

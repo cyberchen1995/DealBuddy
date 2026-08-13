@@ -4,90 +4,90 @@
 
 # DealBuddy 购物搭子
 
-本地购物研究工具，本地优先、证据优先。Local shopping research with manual browser capture, private-by-default analysis, optional LLM help, and MCP integration.
+你在淘宝、天猫、京东打开商品详情页，DealBuddy 把页面上的标题、价格、SKU、规格文字和优惠条件采集到本地工作台。排序和报告在本机完成。追问可以接入你选择的外部 LLM。
 
-DealBuddy 购物搭子帮你把淘宝、天猫、京东商品详情整理成可比较的事实：页面展示价、SKU、店铺、规格、OCR 详情图文字、优惠条件和采集时间。你负责打开真实商品页，它负责把信息收进本地工作台，生成报告，并围绕候选商品继续追问。
+## 做什么
 
-它不是抢券工具，也不是自动化爬虫。DealBuddy 不接入购物平台 API，不导出 Cookie，不绕过验证码，不进入购物车、结算、订单或支付页面。它的核心目标是让一次购买决策有证据、有上下文、有边界。
+- 从商品详情页采集标题、价格、SKU、店铺名、规格文字、优惠条件和采集时间
+- 在浏览器本地用 PP-OCR 识别详情长图中的规格文字
+- 按你设定的品类和需求对已采集商品排序
+- 生成 Markdown 选品报告，包含最符合需求、最低预算、综合性价比、值得加预算、不推荐项五个章节
+- 追问区围绕已采集商品继续分析（需配置外部 LLM Provider）
 
-## 适合做什么
+适合选电视、扫地机器人、家电、数码配件等参数密集型商品。
 
-- 选电视、扫地机器人、家电、数码配件等参数密集型商品
-- 比较不同平台、店铺、SKU、价格条件和页面证据
-- 把详情长图里的规格文字用本地 OCR 补进商品资料
-- 生成带采集时间和价格说明的 Markdown 决策报告
-- 在本地工作台里继续追问：哪款更稳、哪款便宜但有妥协、哪些信息还缺
+## 不做什么
+
+- 不调用电商平台 API
+- 不读取或导出购物平台 Cookie
+- 不做验证码识别
+- 不进入购物车、结算、订单或支付页面
+- 不自动打开页面或翻页
+
+采集只在用户当前浏览的详情页上工作。
 
 ## 快速开始
 
-环境要求：
+环境要求：Python >=3.12、`uv`、本机 Chrome 或 Chromium。
 
-- Python 3.12
-- `uv`
-- 本机 Chrome 或 Chromium
+**让 Agent 帮你装**：把下面这段话发给能执行命令的 Agent（Claude Code、Codex 等），加载扩展的浏览器操作仍需你手动完成：
+
+```text
+帮我安装并启动 DealBuddy 购物搭子（https://github.com/cyberchen1995/DealBuddy）：
+clone 仓库后 uv sync，用 uv run dealbuddy web --port 8765 启动本地工作台并保持运行；
+从 https://github.com/cyberchen1995/DealBuddy/releases/latest 下载 dealbuddy-capture zip 并解压，
+告诉我解压路径，我自己在 chrome://extensions 里加载；完成后提醒我访问 http://127.0.0.1:8765。
+```
+
+装好后 Agent 可通过 `skills/dealbuddy` 的 Agent Skill 直接操作工作台（建会话、读报告、追问分析，走本地 MCP）。
+
+**手动安装**：
 
 ```bash
 uv sync
 uv run dealbuddy web --port 8765
 ```
 
-打开 `http://127.0.0.1:8765`，在工作台创建一个购物研究会话。会话数据默认保存在 `~/.dealbuddy/sessions`，本机配置保存在 `~/.dealbuddy/config.json`。测试或临时运行可以用 `DEALBUDDY_HOME` 指向另一个目录。
+浏览器访问 `http://127.0.0.1:8765`，在工作台新建一个购物研究会话。会话数据保存在 `~/.dealbuddy/sessions`，配置保存在 `~/.dealbuddy/config.json`。临时运行或测试时设置 `DEALBUDDY_HOME` 环境变量可以指向其他目录。
 
-## 工作流
+扩展加载方式：
 
-1. 在 Web 工作台输入品类和原始需求，例如“预算 5000 内，65 英寸，主要看电影”。
-2. 在 Chrome 加载 `extension/dealbuddy-capture/` 扩展。
-3. 打开淘宝、天猫或京东商品详情页。
-4. 点击扩展弹窗里的“整理当前商品信息”，或开启自动采集。
-5. 回到工作台查看商品列表、报告和追问区。
+1. 打开 Chrome 扩展管理页（`chrome://extensions`）。
+2. 开启「开发者模式」。
+3. 点击「加载已解压的扩展程序」，指向 `extension/dealbuddy-capture/` 目录。
 
-扩展默认提交到 `http://127.0.0.1:8765/api/current/offers`。当前会话由工作台控制，不需要在扩展里手填 session id。
+扩展默认投递到 `http://127.0.0.1:8765/api/current/offers`。工作台控制当前会话指针，扩展不需要手动填写 session id。
 
-## Web 工作台
+## Chrome 采集扩展
 
-`dealbuddy web` 启动一个只监听 `127.0.0.1` 的本地服务，包含：
+`extension/dealbuddy-capture/` 是 Chrome MV3 扩展，是商品事实的唯一数据来源。
 
-- 会话：创建、选择、查看不同购买任务
-- 商品表：标题、平台、店铺、页面展示价、SKU、采集时间、可信度
-- 报告：基于已采集商品生成 Markdown 选品报告
-- 追问：保存对话历史，由你配置的外部 LLM 继续分析，并在每轮回答后给出三个可点选的追问建议
-- 设置：配置 LLM Provider，查看脱敏后的密钥状态
-- MCP：给 agent 和 skill 使用的本地工具接口
+扩展从你当前打开的淘宝、天猫、京东商品详情页读取标题、价格、SKU、店铺名和规格文字。采集分两次投递：第一次把页面可读字段发到工作台，几秒内商品列表就能看到这条商品；第二次在浏览器的隐藏 iframe 中用 PP-OCR 识别详情长图中的文字，完成后按同一链接覆盖更新。图片在浏览器内处理，只有识别出的文字随商品数据发到工作台。
 
-采集、排名和报告只使用本地逻辑。追问需要在设置里配置外部 LLM Provider——配置后追问区才可用，并显示当前 provider 和数据发送提示；未配置时追问区会引导你先完成配置。
+点击扩展弹窗中的「整理当前商品信息」触发手动采集。勾选「启用自动采集」后，打开商品详情页时自动触发，只作用于当前页。投递失败时可在弹窗点击「复制 JSON」。
 
-## 浏览器扩展
+## 本地 Web 工作台
 
-`extension/dealbuddy-capture/` 是 Chrome MV3 扩展，是商品事实的主要来源。
+`dealbuddy web` 启动一个绑定 `127.0.0.1` 的本地服务，包含：
 
-加载方式：
+- **会话管理**：创建、选择和查看不同购买任务
+- **商品列表**：标题、平台、店铺、页面展示价、SKU、采集时间、数据可信度
+- **选品报告**：基于已采集商品和你设定的需求生成 Markdown 报告
+- **追问区**：保留对话历史，由你配置的外部 LLM 回答，每轮回答后给出三个可点选的追问建议
+- **LLM Provider 设置**：点击顶栏「LLM」状态胶囊打开弹窗，填写 Provider 名称、Chat Completions URL、模型名称和 API Key
+- **界面主题**：自动（跟随系统）、浅色、深色，选择存在浏览器 localStorage 中
 
-1. 打开 Chrome 扩展管理页。
-2. 启用“开发者模式”。
-3. 选择“加载已解压的扩展程序”并指向 `extension/dealbuddy-capture/`。
+扩展采集入库后工作台在 4 秒内自动同步。从其他标签切回工作台时立即刷新，不需要手动操作。
 
-扩展采用两阶段投递：先把页面可见字段（标题、价格、SKU）送到工作台，几秒内即可在商品列表看到；随后在本地隐藏 iframe 中运行 OCR 补全详情图里的规格文本，识别完成后按同一链接覆盖更新同一条商品。OCR 在浏览器本地执行，图片不会上传到 DealBuddy 服务之外。
+## Agent Skill（MCP）
 
-## 可选 LLM Provider
-
-在工作台的 LLM Provider 设置中填写：
-
-- Provider 名称
-- Chat Completions URL
-- 模型名称
-- API Key
-
-配置写入 `DEALBUDDY_HOME/config.json`。API Key 不会出现在 API 响应、日志或仓库文件中，界面只显示脱敏状态。配置不完整或未启用时，追问区不可用并提示先完成配置；采集与报告不受影响。
-
-## MCP 和命令行
-
-本地 MCP endpoint：
+工作台在同一端口暴露本地 MCP endpoint：
 
 ```text
 POST http://127.0.0.1:8765/mcp
 ```
 
-可用工具：
+提供 8 个工具：
 
 - `create_session`
 - `list_sessions`
@@ -98,39 +98,112 @@ POST http://127.0.0.1:8765/mcp
 - `get_report`
 - `ask_session`
 
-MCP 请求会校验 `Origin`，只接受 localhost/127.0.0.1 来源。`skills/dealbuddy` 提供 Agent Skill 集成材料，适合把 DealBuddy 作为本地购物研究能力接入 Codex 或其他支持 MCP 的 agent。
+请求校验 `Origin`，只接受 localhost/127.0.0.1 来源。`skills/dealbuddy` 提供 Agent Skill 集成材料，用于把 DealBuddy 作为本地购物研究能力接入支持 MCP 的 agent。
 
-命令行接口适合脚本和自动化测试：
+命令行入口 `uv run dealbuddy` 同样可用于会话管理和报告生成，详见 `uv run dealbuddy --help`。
+
+## 报告
+
+报告在商品入库时自动生成，包含五个章节：
+
+1. 最符合需求
+2. 最低预算
+3. 综合性价比
+4. 值得加预算
+5. 不推荐项
+
+每个章节的商品记录包含：商品标题与链接、平台、店铺、匹配分、SKU、页面展示价、估算应付、可见优惠、优惠条件、优劣短评、复核时间、数据可信度。追问对话完成后，报告末尾追加「追问记录」章节。
+
+## 价格口径
+
+DealBuddy 区分以下价格和数据字段：
+
+| 字段 | 模型属性 | 含义 |
+|---|---|---|
+| 标价 | `listed_price` | 划线价或标签价格 |
+| 页面展示价 | `visible_price` | 商品详情页当前展示的价格 |
+| 可见优惠 | `coupon` | 页面上明确显示的优惠信息 |
+| 估算应付 | `estimated_payable` | 根据页面可直接解析的优惠估算的金额 |
+| 优惠条件 | `conditions` | 适用前提，如会员、地区、满减、国补或活动期限 |
+| 复核时间 | `verified_at` | 扩展采集该商品信息的时间 |
+| 数据可信度 | `confidence` | 提取数据完整性评估，值为 high、medium 或 low |
+
+`estimated_payable` 在所有输出中标注为「估算应付」，不描述为结算价格或到手价。
+
+报告顶部固定免责句：
+
+> 价格来自页面可见信息。估算应付只计算页面明确展示且可直接解析的优惠，不代表结算价格。
+
+## 追问与 LLM
+
+追问功能需要你在工作台配置外部 LLM Provider。入口：点击顶栏「LLM」状态胶囊，在弹窗中填写：
+
+- Provider 名称
+- Chat Completions URL
+- 模型名称
+- API Key
+
+配置写入 `~/.dealbuddy/config.json`。API Key 不出现在接口响应、日志或仓库文件中，界面用掩码显示。
+
+配置完成后：
+
+- 追问区可用，输入问题后由你配置的 LLM 回答
+- 等待首字时显示「思考中...」指示
+- 每轮回答后给出三个可点选的追问建议（参数或规格差异、价格或优惠条件、使用场景取舍各一条）
+- 工作台隐私提示变为「外部分析已启用，商品数据可能发送到 {provider_name}。」
+
+未配置或未启用时：
+
+- 追问区显示引导条「追问需要外部 LLM。采集与报告仍在本地完成。」
+- 追问输入框 placeholder 为「配置外部 LLM 后可追问」
+- 采集、排序、报告不受任何影响
+
+## 数据边界
+
+- 工作台服务绑定 `127.0.0.1`，外部网络无法访问
+- 无账号体系
+- 会话文件在 `~/.dealbuddy/sessions/`，配置在 `~/.dealbuddy/config.json`
+- 详情图在浏览器扩展的隐藏 iframe 中做 OCR，图片不经过工作台传输
+- 追问是唯一涉及外部请求的功能，由你配置的 LLM Provider 决定数据去向
+- API Key 写入 `config.json` 后不出现在接口响应或日志中
+- 扩展不读取购物平台的 Cookie
+- MCP 请求校验 `Origin`，拒绝非 localhost 来源
+
+## 开发
+
+### 测试
 
 ```bash
-uv run dealbuddy start --category 电视 --request '预算 5000 元以内，65 英寸，主要看电影'
-uv run dealbuddy intake SESSION_ID --port 8765
-uv run dealbuddy search SESSION_ID
-uv run dealbuddy questions SESSION_ID
-uv run dealbuddy refine SESSION_ID --changes '{"preferences":{"panel_type":"Mini LED"}}'
-uv run dealbuddy report SESSION_ID
+uv run pytest                                     # Python 测试
+node --test "tests/extension/**/*.test.cjs"        # 扩展测试
+uv run ruff check .                                # lint
 ```
 
-## 价格定义
+Python 测试在本地运行，不访问购物网站，不启动浏览器。通过 `DEALBUDDY_HOME` 环境变量隔离测试数据，避免污染 `~/.dealbuddy`。扩展测试使用 Node 内置测试运行器（`node:test`）。
 
-- `listed_price`：划线价或标价
-- `visible_price`：详情页展示价
-- `coupon`：页面明确显示的优惠
-- `estimated_payable`：仅根据可直接解析的页面优惠估算
-- `conditions`：会员、地区、满减、国补或活动期限
-- `verified_at`：采集时间
+### 结构概览
 
-`estimated_payable` 永远不会被描述为结算价格。
+```text
+src/dealbuddy/                    Python 包
+  web.py                          FastAPI 工作台 + MCP（中枢）
+  cli.py                          CLI 入口
+  session.py                      会话状态机
+  models.py                       数据模型（VerifiedOffer 等）
+  reporting.py                    Markdown 选品报告生成
+  ranking.py                      商品排序
+  matching.py                     需求匹配
+  config.py                       配置管理（DEALBUDDY_HOME）
+  static/index.html               工作台单文件 UI
 
-## 测试
+extension/dealbuddy-capture/      Chrome MV3 采集扩展
+  content-script.js               页面采集
+  popup.html / popup.js           扩展弹窗
+  ocr-frame.html / ocr-frame.js   本地 PP-OCR iframe
+  settings-utils.js               设置管理
+  auto-capture-utils.js           自动采集与懒加载等待
 
-```bash
-uv run pytest
-node --test "tests/extension/**/*.test.cjs"
-uv run ruff check .
+skills/dealbuddy/                 Agent Skill 集成材料
 ```
-
-Python 测试只使用本地数据，不访问真实购物网站，也不启动浏览器。扩展测试使用 Node 内置测试运行器。
 
 ## 开源材料
 
@@ -138,5 +211,4 @@ Python 测试只使用本地数据，不访问真实购物网站，也不启动�
 - 许可证：MIT
 - 贡献指南：`CONTRIBUTING.md`
 - 安全政策：`SECURITY.md`
-- 第三方资产说明：`docs/THIRD_PARTY_ASSETS.md`（已知问题：扩展内三个提取自第三方扩展的
-  OCR 运行时 bundle 暂无可核实许可证，上架 Chrome 商店前需替换，详见该文档）
+- 第三方资产说明：`docs/THIRD_PARTY_ASSETS.md`（已知问题：扩展内三个提取自第三方扩展的 OCR 运行时 bundle 暂无可核实许可证，上架 Chrome 商店前需替换，详见该文档）
