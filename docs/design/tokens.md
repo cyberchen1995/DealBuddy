@@ -7,8 +7,9 @@
 - **V2 换肤落地前:本文件即真相**(`index.html` 此时仍是旧 Data-Dense Dashboard 变量,
   无 `--db-*` 块);
 - V2 起:`src/dealbuddy/static/index.html` 的 `:root` 块;
-- V3 起:`extension/dealbuddy-capture/tokens.css`,工作台手抄同步,一致性由
-  `tests/extension/design-tokens-sync.test.cjs` 断言(该测试随 V3 落地)。
+- V3 起(0.7.0,现行):`extension/dealbuddy-capture/tokens.css`,工作台手抄同步,
+  一致性由 `tests/extension/design-tokens-sync.test.cjs` 断言(含工作台暗色双挂
+  两处的一致性)。
 
 变量统一 `--db-` 前缀。亮色定义在 `:root`,暗色覆盖同名变量
 (工作台:`@media (prefers-color-scheme: dark)` 与 `[data-theme="dark"]` 双挂;
