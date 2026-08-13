@@ -1,8 +1,18 @@
+/* DealBuddy 采集浮层(注入电商宿主页)——柔和亲和风。
+   token 来自 tokens.css(manifest 在本文件前注入,变量挂在 :root 与
+   .dealbuddy-reading-overlay 上,随宿主明暗自适应)。
+   卡体不跟随宿主明暗:浮层悬浮在不可控的宿主页上,固定暖炭玻璃保证对比与
+   品牌感,深浅值收敛在下方 --dbov-* 浮层局部变量,不散落进组件规则。 */
+
 .dealbuddy-reading-overlay {
-  color: #172033;
-  font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  line-height: 1.4;
+  --dbov-card-bg: rgba(33, 29, 24, 0.82);
+  --dbov-card-line: rgba(228, 208, 180, 0.32);
+  --dbov-card-text: #f5eee2;
+  --dbov-card-muted: rgba(237, 229, 216, 0.78);
+  --dbov-card-shadow: rgba(10, 7, 4, 0.36);
+  color: var(--dbov-card-text);
+  font-family: var(--db-font-body, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif);
+  line-height: 1.5;
   box-sizing: border-box;
 }
 
@@ -27,24 +37,24 @@
   content: "";
 }
 
+/* 边缘光环:陶土橘→蜂蜜琥珀单圈缓旋,替代旧彩虹 conic */
 .dealbuddy-reading-overlay::before {
   border: 5px solid transparent;
   border-radius: 22px;
   background:
     conic-gradient(
         from var(--dealbuddy-reading-angle, 0deg),
-        #22d3ee,
-        #a78bfa,
-        #f472b6,
-        #fb7185,
-        #fde047,
-        #22d3ee
+        var(--db-accent, #d97757),
+        var(--db-warn, #c99036),
+        var(--db-accent-soft, #f9e9e1),
+        var(--db-warn, #c99036),
+        var(--db-accent, #d97757)
       )
       border-box;
-  opacity: 0.95;
+  opacity: 0.9;
   animation:
-    dealbuddy-reading-edge-spin 2.2s linear infinite,
-    dealbuddy-reading-edge-pulse 1.4s ease-in-out infinite;
+    dealbuddy-reading-edge-spin 3.2s linear infinite,
+    dealbuddy-reading-edge-pulse 2.2s ease-in-out infinite;
   -webkit-mask:
     linear-gradient(#000 0 0) padding-box,
     linear-gradient(#000 0 0);
@@ -52,16 +62,22 @@
   mask-composite: exclude;
 }
 
+/* 内域暖光:两团低透明度光晕,呼吸漂移 */
 .dealbuddy-reading-overlay::after {
   background:
-    radial-gradient(circle at 12% 8%, rgba(253, 224, 71, 0.28), transparent 28%),
-    radial-gradient(circle at 88% 16%, rgba(167, 139, 250, 0.28), transparent 32%),
-    radial-gradient(circle at 92% 88%, rgba(244, 114, 182, 0.24), transparent 34%),
-    radial-gradient(circle at 8% 92%, rgba(34, 211, 238, 0.22), transparent 32%);
-  box-shadow:
-    inset 0 0 42px rgba(34, 211, 238, 0.38),
-    inset 0 0 90px rgba(244, 114, 182, 0.3);
-  opacity: 0.78;
+    radial-gradient(
+      circle at 14% 12%,
+      color-mix(in srgb, var(--db-accent, #d97757) 22%, transparent),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 86% 86%,
+      color-mix(in srgb, var(--db-warn, #c99036) 20%, transparent),
+      transparent 32%
+    );
+  box-shadow: inset 0 0 48px
+    color-mix(in srgb, var(--db-accent, #d97757) 26%, transparent);
+  opacity: 0.75;
   animation: dealbuddy-reading-glow-drift 3.6s ease-in-out infinite alternate;
 }
 
@@ -69,16 +85,15 @@
   position: relative;
   z-index: 1;
   width: min(520px, calc(100vw - 56px));
-  border: 1px solid rgba(255, 255, 255, 0.48);
-  border-radius: 22px;
+  border: 1px solid var(--dbov-card-line);
+  border-radius: 20px;
   padding: 20px 24px;
-  background: rgba(15, 23, 42, 0.72);
-  color: #fff;
+  background: var(--dbov-card-bg);
+  color: var(--dbov-card-text);
   box-shadow:
-    0 24px 70px rgba(15, 23, 42, 0.28),
-    0 0 34px rgba(244, 114, 182, 0.32);
+    0 24px 60px var(--dbov-card-shadow),
+    0 0 30px color-mix(in srgb, var(--db-accent, #d97757) 22%, transparent);
   text-align: center;
-  text-shadow: 0 1px 2px rgba(15, 23, 42, 0.34);
   backdrop-filter: blur(14px);
   pointer-events: auto;
 }
@@ -91,8 +106,8 @@
 }
 
 .dealbuddy-reading-title {
-  font-size: 18px;
-  font-weight: 800;
+  font-size: 17px;
+  font-weight: 600;
   letter-spacing: 0;
   text-align: left;
 }
@@ -100,23 +115,30 @@
 .dealbuddy-reading-minimize {
   min-width: 64px;
   height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.38);
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(245, 238, 226, 0.16);
+  color: var(--dbov-card-text);
   cursor: pointer;
   font: inherit;
   font-size: 12px;
+  font-weight: 600;
   line-height: 1;
+  transition: background-color 200ms ease;
 }
 
 .dealbuddy-reading-minimize:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(245, 238, 226, 0.26);
+}
+
+.dealbuddy-reading-minimize:focus-visible {
+  outline: 2px solid var(--db-warn, #c99036);
+  outline-offset: 2px;
 }
 
 .dealbuddy-reading-status {
   margin-top: 9px;
-  color: rgba(255, 255, 255, 0.82);
+  color: var(--dbov-card-muted);
   font-size: 13px;
   line-height: 1.55;
   text-align: left;
@@ -129,32 +151,44 @@
   z-index: 2;
   display: none;
   width: min(360px, calc(100vw - 32px));
-  border: 1px solid rgba(255, 255, 255, 0.46);
-  border-radius: 12px;
+  border: 1px solid var(--dbov-card-line);
+  border-radius: 16px;
   padding: 12px 14px;
-  background: rgba(15, 23, 42, 0.86);
-  color: #fff;
+  background: var(--dbov-card-bg);
+  color: var(--dbov-card-text);
   cursor: pointer;
   font: inherit;
   text-align: left;
   box-shadow:
-    0 16px 42px rgba(15, 23, 42, 0.28),
-    0 0 22px rgba(34, 211, 238, 0.28);
+    0 16px 42px var(--dbov-card-shadow),
+    0 0 22px color-mix(in srgb, var(--db-accent, #d97757) 26%, transparent);
   backdrop-filter: blur(12px);
   pointer-events: auto;
+  transition: box-shadow 200ms ease;
+}
+
+.dealbuddy-reading-mini:hover {
+  box-shadow:
+    0 18px 46px var(--dbov-card-shadow),
+    0 0 30px color-mix(in srgb, var(--db-accent, #d97757) 38%, transparent);
+}
+
+.dealbuddy-reading-mini:focus-visible {
+  outline: 2px solid var(--db-warn, #c99036);
+  outline-offset: 2px;
 }
 
 .dealbuddy-reading-mini-title {
   display: block;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .dealbuddy-reading-mini-status {
   display: block;
   margin-top: 3px;
   overflow: hidden;
-  color: rgba(255, 255, 255, 0.78);
+  color: var(--dbov-card-muted);
   font-size: 12px;
   line-height: 1.4;
   text-overflow: ellipsis;
@@ -194,23 +228,27 @@
 @keyframes dealbuddy-reading-edge-pulse {
   0%,
   100% {
-    filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.44));
+    filter: drop-shadow(
+      0 0 12px color-mix(in srgb, var(--db-accent, #d97757) 38%, transparent)
+    );
   }
 
   50% {
-    filter: drop-shadow(0 0 28px rgba(244, 114, 182, 0.72));
+    filter: drop-shadow(
+      0 0 26px color-mix(in srgb, var(--db-warn, #c99036) 52%, transparent)
+    );
   }
 }
 
 @keyframes dealbuddy-reading-glow-drift {
   from {
     transform: scale(1);
-    opacity: 0.66;
+    opacity: 0.62;
   }
 
   to {
     transform: scale(1.02);
-    opacity: 0.9;
+    opacity: 0.85;
   }
 }
 
@@ -218,5 +256,10 @@
   .dealbuddy-reading-overlay::before,
   .dealbuddy-reading-overlay::after {
     animation: none;
+  }
+
+  .dealbuddy-reading-minimize,
+  .dealbuddy-reading-mini {
+    transition: none;
   }
 }

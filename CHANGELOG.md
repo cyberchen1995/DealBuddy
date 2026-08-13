@@ -2,6 +2,17 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## [0.8.0] - 2026-08-13
+
+### Changed
+
+- **采集页浮层换肤为柔和亲和风**:彩虹边缘光效改为陶土橘与蜂蜜琥珀的暖色光环
+  (随浏览器明暗自适应),进度卡与右下角最小化胶囊统一为暖炭玻璃质感;
+  行为(最小化/展开、`prefers-reduced-motion` 降级)不变。至此工作台、扩展弹窗、
+  采集浮层与落地页共用同一套设计 token。
+- 扩展 content 脚本注入的样式改由 `tokens.css` + `content-style.css` 两个文件组成
+  (manifest 声明顺序注入,变量在前)。
+
 ## [0.7.0] - 2026-08-13
 
 ### Changed
