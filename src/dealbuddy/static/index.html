@@ -2451,14 +2451,31 @@
           }
         }
         offerList.scrollTop = scrollSnapshot.offers;
-        // 焦点最后归还:重采集会把同商品移到列表尾,focus 自带的滚动使其保持可见,
-        // 不能再被上面的绝对偏移覆盖
+        // 焦点归还不触发浏览器滚动(窄幅下列表不设滚动容器,原生 focus 滚动
+        // 会把整个文档拽回商品区);仅当列表自身可滚时手动把卡带回列表视口
         if (focusedCardUrl) {
-          offerList
-            .querySelector(
-              `details.offer-card[data-url="${CSS.escape(focusedCardUrl)}"] summary`,
-            )
-            ?.focus();
+          const focusedCard = offerList.querySelector(
+            `details.offer-card[data-url="${CSS.escape(focusedCardUrl)}"]`,
+          );
+          const summary = focusedCard?.querySelector("summary");
+          if (summary) {
+            // preventScroll 在刚替换完 innerHTML 的未稳定布局下并不总是生效
+            // (实测 Chrome 仍会滚动文档),focus 前后夹紧文档滚动位置兜底
+            const docX = window.scrollX;
+            const docY = window.scrollY;
+            summary.focus({ preventScroll: true });
+            if (window.scrollX !== docX || window.scrollY !== docY) {
+              window.scrollTo(docX, docY);
+            }
+            if (offerList.scrollHeight > offerList.clientHeight) {
+              const delta =
+                focusedCard.getBoundingClientRect().top -
+                offerList.getBoundingClientRect().top;
+              if (delta < 0 || delta > offerList.clientHeight - 48) {
+                offerList.scrollTop += delta - 12;
+              }
+            }
+          }
         }
 
         reportView.innerHTML = renderMarkdown(session?.report_markdown || "");
