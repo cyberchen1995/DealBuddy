@@ -334,15 +334,57 @@ def test_web_chat_streams_llm_delta_chunks_and_persists_messages(
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     assert seen_payload["stream"] is True
+    # 追问载荷带最近对话上下文,且尾部不重复本轮问题
+    request_context = json.loads(seen_payload["messages"][1]["content"])
+    assert request_context["question"] == "怎么选？"
+    assert request_context["conversation"] == []
     assert "event: user" in body
     assert "event: delta" in body
     assert "先看亮度" in body
     assert "，再看接口" in body
     assert "event: done" in body
+    assert '"failed": false' in body
     reloaded = SessionStore().load(session_id)
     assert [message["role"] for message in reloaded.messages] == ["user", "assistant"]
     assert reloaded.messages[-1]["source"] == "llm"
     assert reloaded.messages[-1]["content"] == "先看亮度，再看接口"
+
+
+def test_web_chat_stream_marks_failed_turn(tmp_path, monkeypatch) -> None:
+    """LLM 调用失败:失败说明照常流式下发,done 事件带 failed=true 供前端跳过建议。"""
+    monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
+
+    def broken_urlopen(request: object, timeout: int) -> FakeStreamingLLMResponse:
+        raise OSError("connection refused")
+
+    monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", broken_urlopen)
+    monkeypatch.setattr("dealbuddy.web._run_in_background", lambda task: task())
+    client = TestClient(create_app())
+    session_id = client.post(
+        "/api/sessions",
+        json={"category": "电视", "request": "主要连接 NAS 使用"},
+    ).json()["session"]["session_id"]
+    client.post(
+        "/api/settings/llm",
+        json={
+            "enabled": True,
+            "provider_name": "openai-compatible",
+            "base_url": "https://api.example.test/v1/chat/completions",
+            "model": "gpt-test",
+            "api_key": "sk-test-secret",
+        },
+    )
+
+    with client.stream(
+        "POST",
+        f"/api/sessions/{session_id}/messages/stream",
+        json={"content": "怎么选？"},
+    ) as response:
+        body = "".join(response.iter_text())
+
+    assert response.status_code == 200
+    assert "LLM Provider 调用失败" in body
+    assert '"failed": true' in body
 
 
 def test_web_regenerates_report_with_conversation_and_increments_version(

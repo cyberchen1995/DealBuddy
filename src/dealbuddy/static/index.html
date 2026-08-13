@@ -2220,8 +2220,8 @@
         };
       }
 
-      async function streamChatResponse(content, assistantView) {
-        const response = await fetch(`/api/sessions/${state.currentSessionId}/messages/stream`, {
+      async function streamChatResponse(sessionId, content, assistantView) {
+        const response = await fetch(`/api/sessions/${sessionId}/messages/stream`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content }),
@@ -2230,19 +2230,21 @@
           throw new Error(await response.text());
         }
         const writer = createTypewriter(assistantView.content);
+        let turnFailed = false;
         const onEvent = (event) => {
           const payload = event.data ? JSON.parse(event.data) : {};
           if (event.type === "delta" && payload.content) {
             writer.push(payload.content);
           }
           if (event.type === "done") {
+            turnFailed = Boolean(payload.failed);
             assistantView.role.textContent = `assistant / ${payload.source || "local"}`;
           }
         };
         if (!response.body) {
           handleSseText(await response.text(), onEvent);
           await writer.finish();
-          return;
+          return turnFailed;
         }
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -2258,6 +2260,7 @@
         buffer += decoder.decode();
         handleSseText(buffer, onEvent);
         await writer.finish();
+        return turnFailed;
       }
 
       function renderSessionDetail() {
@@ -2386,25 +2389,33 @@
         }
       });
 
+      // 请求代号:清空即作废所有在飞行的建议请求,防止旧轮次的 chips 混入新轮
+      let chatSuggestionsRequestId = 0;
+
       function clearChatSuggestions() {
+        chatSuggestionsRequestId += 1;
         const container = $("chat-suggestions");
         container.hidden = true;
         container.innerHTML = "";
       }
 
       // 回答完成后向 LLM 再要 3 个互不重复的追问建议;失败/过期一律静默
-      async function refreshChatSuggestions() {
+      async function refreshChatSuggestions(sessionId) {
         clearChatSuggestions();
-        if (!state.llmConfigured || !state.currentSessionId) {
+        const requestId = chatSuggestionsRequestId;
+        if (!state.llmConfigured || !sessionId) {
           return;
         }
-        const sessionId = state.currentSessionId;
         try {
           const payload = await api(
             `/api/sessions/${sessionId}/suggestions`,
             { method: "POST" },
           );
-          if (sessionId !== state.currentSessionId || state.chatStreaming) {
+          if (
+            requestId !== chatSuggestionsRequestId ||
+            sessionId !== state.currentSessionId ||
+            state.chatStreaming
+          ) {
             return;
           }
           const suggestions = Array.isArray(payload.suggestions)
@@ -2441,6 +2452,8 @@
         if (state.chatStreaming || !content) {
           return;
         }
+        // 锚定发起时会话:流式期间用户可能切会话,回答与建议都必须跟随原会话
+        const sessionId = state.currentSessionId;
         state.chatStreaming = true;
         updateChatSubmit();
         clearChatSuggestions();
@@ -2456,10 +2469,17 @@
           "<span>.</span><span>.</span><span>.</span></span></p>";
         let answered = false;
         try {
-          await streamChatResponse(content, assistantView);
+          const turnFailed = await streamChatResponse(
+            sessionId,
+            content,
+            assistantView,
+          );
           assistantView.item.classList.remove("streaming");
-          await loadSession(state.currentSessionId);
-          answered = true;
+          if (sessionId === state.currentSessionId) {
+            await loadSession(sessionId);
+          }
+          // LLM 失败的轮次不再请求建议,避免立刻重打不可用的 provider
+          answered = !turnFailed;
         } catch (error) {
           assistantView.item.classList.remove("streaming");
           assistantView.role.textContent = "assistant / error";
@@ -2469,8 +2489,8 @@
           state.chatStreaming = false;
           updateChatSubmit();
         }
-        if (answered) {
-          await refreshChatSuggestions();
+        if (answered && sessionId === state.currentSessionId) {
+          await refreshChatSuggestions(sessionId);
         }
       }
 

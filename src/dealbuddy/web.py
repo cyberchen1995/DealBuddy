@@ -261,6 +261,15 @@ def _llm_chat_payload(
         VerifiedOffer.model_validate(item).model_dump(mode="json")
         for item in session.verified_offers
     ]
+    # 带上最近对话,追问里的指代(「那第二款呢」)才能被解析;
+    # 调用前本轮 user 消息已落库,尾条与 question 重复时剔除
+    conversation = _conversation_context(session)
+    if (
+        conversation
+        and conversation[-1]["role"] == "user"
+        and conversation[-1]["content"] == content
+    ):
+        conversation = conversation[:-1]
     payload: dict[str, object] = {
         "model": settings.model,
         "messages": [
@@ -279,6 +288,7 @@ def _llm_chat_payload(
                         "requirements": session.requirements.model_dump(mode="json"),
                         "offers": offers,
                         "report": session.report_markdown,
+                        "conversation": conversation[-8:],
                         "question": content,
                     },
                     ensure_ascii=False,
@@ -511,11 +521,13 @@ def stream_session_answer_events(
     session = store.load(session_id)
     source: Literal["local", "llm"] = "llm"
     answer = ""
+    failed = False
     try:
         for chunk in call_llm_provider_stream(llm, session, content):
             answer += chunk
             yield _sse("delta", {"content": chunk, "source": source})
     except Exception as exc:  # noqa: BLE001
+        failed = True
         answer = _llm_failure_answer(exc)
         for chunk in _typewriter_chunks(answer):
             yield _sse("delta", {"content": chunk, "source": source})
@@ -526,7 +538,11 @@ def stream_session_answer_events(
         content=answer,
         source=source,
     )
-    yield _sse("done", {"source": source, "messages": session.messages})
+    # failed 让前端把这轮当失败处理(例如不再请求追问建议,避免重复打挂掉的 provider)
+    yield _sse(
+        "done",
+        {"source": source, "failed": failed, "messages": session.messages},
+    )
 
 
 def _short_offer_summary(value: object) -> str | None:
