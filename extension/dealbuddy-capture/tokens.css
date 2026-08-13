@@ -3,9 +3,11 @@
    手工同步,一致性由 tests/extension/design-tokens-sync.test.cjs 断言。
    选择器双挂 .dealbuddy-reading-overlay:content 脚本注入宿主页时(V4)浮层可取值。 */
 
+/* 本文件只含 --db-* 自定义属性:注入宿主 :root 时纯变量无渲染副作用。
+   color-scheme 属于文档级配置,由各消费文档自理(popup.html 内联声明),
+   不得出现在这里——否则会改写宿主页的原生控件与滚动条配色。 */
 :root,
 .dealbuddy-reading-overlay {
-  color-scheme: light;
   --db-bg: #faf6f0;
   --db-surface: #ffffff;
   --db-surface-soft: #f5efe6;
@@ -47,7 +49,6 @@
 @media (prefers-color-scheme: dark) {
   :root,
   .dealbuddy-reading-overlay {
-    color-scheme: dark;
     --db-bg: #211d18;
     --db-surface: #2b2620;
     --db-surface-soft: #332d26;
