@@ -2624,7 +2624,11 @@
           return;
         }
         const offer = state.currentSession?.verified_offers?.[index];
-        const title = text(offer?.title, "这个商品");
+        if (!offer) {
+          return;
+        }
+        const offerUrl = text(offer.url);
+        const title = text(offer.title, "这个商品");
         const confirmed = await confirmDanger({
           title: "删除这个商品？",
           message: `「${title}」将从当前会话移除，报告会重新生成。`,
@@ -2633,9 +2637,21 @@
         if (!confirmed) {
           return;
         }
-        await api(`/api/sessions/${state.currentSessionId}/offers/${index}`, {
-          method: "DELETE",
-        });
+        // 等待确认期间列表可能因重采集重排:按 URL 在最新会话数据里重解析下标,
+        // 确保删除的是对话框里点名的那个商品
+        const offers = state.currentSession?.verified_offers || [];
+        const currentIndex = offers.findIndex(
+          (item) => text(item.url) === offerUrl,
+        );
+        if (currentIndex === -1) {
+          setMessage("该商品已不在当前会话中", true);
+          await refreshSessions();
+          return;
+        }
+        await api(
+          `/api/sessions/${state.currentSessionId}/offers/${currentIndex}`,
+          { method: "DELETE" },
+        );
         await refreshSessions();
         setMessage("商品已删除");
       }
@@ -2897,6 +2913,10 @@
           return;
         }
         if (state.chatStreaming || state.reportRegenerating) {
+          return;
+        }
+        // 确认层打开时暂停同步:等待确认期间列表重排会让"按下标删除"指向错误商品
+        if (!$("confirm-modal").hidden) {
           return;
         }
         if (LIVE_SYNC_SKIP_FOCUS_IDS.has(document.activeElement?.id)) {
