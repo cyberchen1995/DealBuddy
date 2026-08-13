@@ -564,30 +564,22 @@
         padding: 12px;
       }
 
-      /* soft 底容器(会话表单/LLM 设置区)内输入框反转为白底,避免与容器同色融合 */
+      /* soft 底容器(会话表单)内输入框反转为白底,避免与容器同色融合 */
       .session-form input,
-      .session-form textarea,
-      .disclosure-body input,
-      .disclosure-body textarea {
+      .session-form textarea {
         background: var(--db-surface);
         border-color: var(--db-surface);
       }
 
       .session-form input:hover,
-      .session-form textarea:hover,
-      .disclosure-body input:hover,
-      .disclosure-body textarea:hover {
+      .session-form textarea:hover {
         border-color: var(--db-line-strong);
       }
 
       .session-form input:focus,
       .session-form textarea:focus,
       .session-form input:focus-visible,
-      .session-form textarea:focus-visible,
-      .disclosure-body input:focus,
-      .disclosure-body textarea:focus,
-      .disclosure-body input:focus-visible,
-      .disclosure-body textarea:focus-visible {
+      .session-form textarea:focus-visible {
         border-color: var(--db-accent);
       }
 
@@ -689,7 +681,7 @@
         gap: 8px;
       }
 
-      /* ---------- 折叠区(LLM 设置;X8 轮将弹窗化) ---------- */
+      /* ---------- details/summary 通用(商品卡使用) ---------- */
       summary {
         cursor: pointer;
         list-style: none;
@@ -710,57 +702,61 @@
         outline-offset: -2px;
       }
 
-      .disclosure {
-        background: var(--db-surface-soft);
-        border-radius: var(--db-radius-s);
-        min-width: 0;
-        overflow: hidden;
+      /* ---------- LLM 设置弹窗(modal 基建,X3 危险确认将复用) ---------- */
+      .modal-backdrop {
+        align-items: flex-start;
+        backdrop-filter: blur(6px);
+        background: color-mix(in srgb, var(--db-text) 30%, transparent);
+        display: flex;
+        inset: 0;
+        justify-content: center;
+        overflow-y: auto;
+        padding: 8vh 20px 20px;
+        position: fixed;
+        z-index: 100;
       }
 
-      .disclosure-summary {
+      .modal-backdrop[hidden] {
+        display: none;
+      }
+
+      .modal-card {
+        animation: modal-pop 200ms ease;
+        background: var(--db-surface);
+        border-radius: var(--db-radius-m);
+        box-shadow: 0 24px 60px var(--db-shadow-deep), 0 0 0 1px var(--db-ring);
+        display: grid;
+        gap: 16px;
+        padding: 20px;
+        width: min(560px, 100%);
+      }
+
+      @keyframes modal-pop {
+        from {
+          opacity: 0;
+          transform: translateY(8px) scale(0.98);
+        }
+      }
+
+      .modal-head {
         align-items: flex-start;
         display: flex;
         gap: 12px;
         justify-content: space-between;
-        padding: 12px;
       }
 
-      .disclosure-summary:hover {
-        background: var(--db-line);
-      }
-
-      .llm-summary {
-        align-items: stretch;
-        display: block;
-        padding: 12px;
-      }
-
-      .summary-copy {
+      .modal-title-copy {
         display: grid;
         gap: 4px;
         min-width: 0;
       }
 
-      .settings-title-row {
-        align-items: center;
-        display: flex;
-        gap: 8px;
-        justify-content: space-between;
-        min-width: 0;
-      }
-
-      .settings-title-row strong {
-        font-size: 13.5px;
-      }
-
-      .summary-action {
-        background: var(--db-accent-soft);
-        border-radius: 999px;
-        color: var(--db-link);
-        flex: 0 0 auto;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 2px 12px;
+      /* 顶栏 LLM chip 是弹窗入口(button),抑制主按钮基样式 */
+      button.status-chip:hover:not(:disabled) {
+        background: var(--db-surface-soft);
+        box-shadow: 0 2px 8px var(--db-shadow), 0 0 0 1px var(--db-ring);
+        color: var(--db-text);
+        transform: none;
       }
 
       .summary-status {
@@ -771,13 +767,6 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-      }
-
-      .disclosure-body {
-        display: grid;
-        gap: 12px;
-        min-width: 0;
-        padding: 4px 12px 12px;
       }
 
       .privacy-note {
@@ -1374,7 +1363,15 @@
           </div>
           <span class="status-chip" id="service-status">服务检查中</span>
           <span class="status-chip" id="current-status">当前会话：未选择</span>
-          <span class="status-chip" id="llm-status">LLM：未启用</span>
+          <button
+            class="status-chip"
+            id="llm-status"
+            type="button"
+            aria-haspopup="dialog"
+            title="打开 LLM Provider 设置"
+          >
+            LLM：未启用
+          </button>
         </div>
       </div>
     </header>
@@ -1411,61 +1408,6 @@
             </div>
           </form>
           <div class="session-list" id="session-list" aria-live="polite"></div>
-
-          <details class="disclosure llm-disclosure" id="llm-settings">
-            <summary class="disclosure-summary llm-summary">
-              <span class="summary-copy">
-                <span class="settings-title-row">
-                  <strong>LLM Provider</strong>
-                  <span class="summary-action">设置</span>
-                </span>
-                <span class="summary-status" id="llm-settings-summary">未启用</span>
-              </span>
-            </summary>
-            <form class="disclosure-body llm-body" id="llm-form">
-              <p class="privacy-note" id="privacy-notice">默认仅本地分析</p>
-              <label class="toggle-row" for="llm-enabled">
-                <input type="checkbox" id="llm-enabled" />
-                <span class="toggle-copy">
-                  <strong>启用外部 LLM</strong>
-                  <span class="helper">未配置时使用本地规则和澄清问题。</span>
-                </span>
-              </label>
-              <div class="field-grid provider-grid">
-                <div class="field">
-                  <label for="llm-provider">Provider 名称</label>
-                  <input id="llm-provider" value="openai-compatible" />
-                </div>
-                <div class="field">
-                  <label for="llm-model">模型名称</label>
-                  <input id="llm-model" placeholder="gpt-4.1-mini" />
-                </div>
-                <div class="field wide">
-                  <label for="llm-base-url">Chat Completions URL</label>
-                  <input
-                    id="llm-base-url"
-                    placeholder="https://api.example.com/v1/chat/completions"
-                  />
-                </div>
-                <div class="field wide">
-                  <label for="llm-api-key">API Key</label>
-                  <input
-                    id="llm-api-key"
-                    placeholder="API Key"
-                    type="password"
-                    autocomplete="off"
-                  />
-                </div>
-              </div>
-              <p class="notice" id="llm-test-result"></p>
-              <div class="form-actions">
-                <button class="secondary" id="llm-test-button" type="button">
-                  测试连接
-                </button>
-                <button type="submit">保存设置</button>
-              </div>
-            </form>
-          </details>
 
           <div class="notice" id="page-message"></div>
         </div>
@@ -1514,6 +1456,68 @@
         </div>
       </section>
     </main>
+
+    <div class="modal-backdrop" id="llm-modal" hidden>
+      <div
+        class="modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="llm-modal-title"
+      >
+        <div class="modal-head">
+          <div class="modal-title-copy">
+            <h3 id="llm-modal-title">LLM Provider 设置</h3>
+            <span class="summary-status" id="llm-settings-summary">未启用</span>
+          </div>
+          <button class="secondary" id="llm-modal-close" type="button">
+            关闭
+          </button>
+        </div>
+        <form class="stack" id="llm-form">
+          <p class="privacy-note" id="privacy-notice">默认仅本地分析</p>
+          <label class="toggle-row" for="llm-enabled">
+            <input type="checkbox" id="llm-enabled" />
+            <span class="toggle-copy">
+              <strong>启用外部 LLM</strong>
+              <span class="helper">未配置时使用本地规则和澄清问题。</span>
+            </span>
+          </label>
+          <div class="field-grid provider-grid">
+            <div class="field">
+              <label for="llm-provider">Provider 名称</label>
+              <input id="llm-provider" value="openai-compatible" />
+            </div>
+            <div class="field">
+              <label for="llm-model">模型名称</label>
+              <input id="llm-model" placeholder="gpt-4.1-mini" />
+            </div>
+            <div class="field wide">
+              <label for="llm-base-url">Chat Completions URL</label>
+              <input
+                id="llm-base-url"
+                placeholder="https://api.example.com/v1/chat/completions"
+              />
+            </div>
+            <div class="field wide">
+              <label for="llm-api-key">API Key</label>
+              <input
+                id="llm-api-key"
+                placeholder="API Key"
+                type="password"
+                autocomplete="off"
+              />
+            </div>
+          </div>
+          <p class="notice" id="llm-test-result"></p>
+          <div class="form-actions">
+            <button class="secondary" id="llm-test-button" type="button">
+              测试连接
+            </button>
+            <button type="submit">保存设置</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <script>
       const state = {
@@ -1569,6 +1573,71 @@
       }
 
       initTheme();
+
+      // LLM 设置弹窗:顶栏 LLM chip 为入口;Esc/遮罩/关闭按钮均可退出,焦点圈在弹窗内。
+      const llmModal = {
+        opener: null,
+
+        focusables() {
+          return $("llm-modal").querySelectorAll(
+            'button, input, textarea, [tabindex]:not([tabindex="-1"])',
+          );
+        },
+
+        open() {
+          this.opener = document.activeElement;
+          $("llm-modal").hidden = false;
+          document.body.style.overflow = "hidden";
+          const first = this.focusables()[0];
+          if (first) {
+            first.focus();
+          }
+        },
+
+        close() {
+          $("llm-modal").hidden = true;
+          document.body.style.overflow = "";
+          if (this.opener instanceof HTMLElement) {
+            this.opener.focus();
+          }
+          this.opener = null;
+        },
+      };
+
+      $("llm-status").addEventListener("click", () => llmModal.open());
+      $("llm-modal-close").addEventListener("click", () => llmModal.close());
+
+      $("llm-modal").addEventListener("click", (event) => {
+        if (event.target === $("llm-modal")) {
+          llmModal.close();
+        }
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if ($("llm-modal").hidden) {
+          return;
+        }
+        if (event.key === "Escape") {
+          event.preventDefault();
+          llmModal.close();
+          return;
+        }
+        if (event.key === "Tab") {
+          const focusables = llmModal.focusables();
+          if (focusables.length === 0) {
+            return;
+          }
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      });
 
       function text(value, fallback = "") {
         return value === null || value === undefined || value === ""
