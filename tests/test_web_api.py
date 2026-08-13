@@ -195,10 +195,74 @@ def test_web_can_delete_session_offer_and_rebuild_report(
     assert "海信 65E7N Pro" not in session["report_markdown"]
 
 
-def test_web_chat_uses_local_fallback_and_persists_messages(
+def test_web_chat_suggestions_endpoint(tmp_path, monkeypatch) -> None:
+    """追问建议(X9):未配置 400;配置后返回去重的 3 条;LLM 失败静默返回空。"""
+    monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
+    client = TestClient(create_app())
+    session_id = client.post(
+        "/api/sessions",
+        json={"category": "电视", "request": "预算5000，65英寸"},
+    ).json()["session"]["session_id"]
+
+    denied = client.post(f"/api/sessions/{session_id}/suggestions")
+    assert denied.status_code == 400
+    assert "LLM" in denied.json()["detail"]
+
+    client.post(
+        "/api/settings/llm",
+        json={
+            "enabled": True,
+            "provider_name": "openai-compatible",
+            "base_url": "https://api.example.test/v1/chat/completions",
+            "model": "test-model",
+            "api_key": "sk-test",
+        },
+    )
+
+    def fake_urlopen(request: object, timeout: int) -> FakeLLMResponse:
+        return FakeLLMResponse(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "suggestions": [
+                                        "144Hz 和 165Hz 差别大吗？",
+                                        "144Hz 和 165Hz 差别大吗？",
+                                        "有店铺券的估算应付是多少？",
+                                        "卧室 3 米观距选 50 还是 55 英寸？",
+                                    ]
+                                },
+                                ensure_ascii=False,
+                            )
+                        }
+                    }
+                ]
+            }
+        )
+
+    monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", fake_urlopen)
+    ok = client.post(f"/api/sessions/{session_id}/suggestions")
+    assert ok.status_code == 200
+    suggestions = ok.json()["suggestions"]
+    assert len(suggestions) == 3
+    assert len(set(suggestions)) == 3
+
+    def broken_urlopen(request: object, timeout: int) -> FakeLLMResponse:
+        raise OSError("connection refused")
+
+    monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", broken_urlopen)
+    degraded = client.post(f"/api/sessions/{session_id}/suggestions")
+    assert degraded.status_code == 200
+    assert degraded.json()["suggestions"] == []
+
+
+def test_web_chat_requires_llm_and_keeps_session_clean(
     tmp_path,
     monkeypatch,
 ) -> None:
+    """追问强制外部 LLM(X8):未配置时两个消息端点都 400,且不落任何消息。"""
     monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
     client = TestClient(create_app())
     session_id = client.post(
@@ -211,13 +275,18 @@ def test_web_chat_uses_local_fallback_and_persists_messages(
         f"/api/sessions/{session_id}/messages",
         json={"content": "这几个怎么选？"},
     )
+    assert response.status_code == 400
+    assert "LLM" in response.json()["detail"]
 
-    assert response.status_code == 200
-    messages = response.json()["messages"]
-    assert [message["role"] for message in messages] == ["user", "assistant"]
-    assert "本地规则" in messages[-1]["content"]
+    stream_response = client.post(
+        f"/api/sessions/{session_id}/messages/stream",
+        json={"content": "这几个怎么选？"},
+    )
+    assert stream_response.status_code == 400
+    assert "LLM" in stream_response.json()["detail"]
+
     reloaded = SessionStore().load(session_id)
-    assert [message["role"] for message in reloaded.messages] == ["user", "assistant"]
+    assert reloaded.messages == []
 
 
 def test_web_chat_streams_llm_delta_chunks_and_persists_messages(
@@ -265,15 +334,57 @@ def test_web_chat_streams_llm_delta_chunks_and_persists_messages(
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/event-stream")
     assert seen_payload["stream"] is True
+    # 追问载荷带最近对话上下文,且尾部不重复本轮问题
+    request_context = json.loads(seen_payload["messages"][1]["content"])
+    assert request_context["question"] == "怎么选？"
+    assert request_context["conversation"] == []
     assert "event: user" in body
     assert "event: delta" in body
     assert "先看亮度" in body
     assert "，再看接口" in body
     assert "event: done" in body
+    assert '"failed": false' in body
     reloaded = SessionStore().load(session_id)
     assert [message["role"] for message in reloaded.messages] == ["user", "assistant"]
     assert reloaded.messages[-1]["source"] == "llm"
     assert reloaded.messages[-1]["content"] == "先看亮度，再看接口"
+
+
+def test_web_chat_stream_marks_failed_turn(tmp_path, monkeypatch) -> None:
+    """LLM 调用失败:失败说明照常流式下发,done 事件带 failed=true 供前端跳过建议。"""
+    monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
+
+    def broken_urlopen(request: object, timeout: int) -> FakeStreamingLLMResponse:
+        raise OSError("connection refused")
+
+    monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", broken_urlopen)
+    monkeypatch.setattr("dealbuddy.web._run_in_background", lambda task: task())
+    client = TestClient(create_app())
+    session_id = client.post(
+        "/api/sessions",
+        json={"category": "电视", "request": "主要连接 NAS 使用"},
+    ).json()["session"]["session_id"]
+    client.post(
+        "/api/settings/llm",
+        json={
+            "enabled": True,
+            "provider_name": "openai-compatible",
+            "base_url": "https://api.example.test/v1/chat/completions",
+            "model": "gpt-test",
+            "api_key": "sk-test-secret",
+        },
+    )
+
+    with client.stream(
+        "POST",
+        f"/api/sessions/{session_id}/messages/stream",
+        json={"content": "怎么选？"},
+    ) as response:
+        body = "".join(response.iter_text())
+
+    assert response.status_code == 200
+    assert "LLM Provider 调用失败" in body
+    assert '"failed": true' in body
 
 
 def test_web_regenerates_report_with_conversation_and_increments_version(
@@ -287,10 +398,13 @@ def test_web_regenerates_report_with_conversation_and_increments_version(
         json={"category": "电视", "request": "预算5000，65英寸"},
     ).json()["session"]["session_id"]
     client.post("/api/current/offers", json=sample_payload(title="TCL Q10"))
-    client.post(
-        f"/api/sessions/{session_id}/messages",
-        json={"content": "主要连接 NAS 使用，自建了 Emby 影视库"},
+    # 追问已强制外部 LLM,对话上下文直接写入会话(重新生成报告不依赖消息来源)
+    store = SessionStore()
+    session_model = store.load(session_id)
+    session_model.messages.append(
+        {"role": "user", "content": "主要连接 NAS 使用，自建了 Emby 影视库"}
     )
+    store.save(session_model)
 
     response = client.post(f"/api/sessions/{session_id}/report/regenerate")
 

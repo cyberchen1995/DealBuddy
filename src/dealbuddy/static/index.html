@@ -1009,6 +1009,38 @@
         }
       }
 
+      /* 等待 LLM 首字的思考指示 */
+      .thinking-hint {
+        color: var(--db-muted);
+      }
+
+      .thinking-dots span {
+        animation: thinking-bounce 1.2s ease-in-out infinite;
+        display: inline-block;
+      }
+
+      .thinking-dots span:nth-child(2) {
+        animation-delay: 0.15s;
+      }
+
+      .thinking-dots span:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      @keyframes thinking-bounce {
+        0%,
+        60%,
+        100% {
+          opacity: 0.35;
+          transform: none;
+        }
+
+        30% {
+          opacity: 1;
+          transform: translateY(-2px);
+        }
+      }
+
       .chat-form {
         display: grid;
         gap: 12px;
@@ -1016,6 +1048,68 @@
 
       .chat-form textarea {
         min-height: 68px;
+      }
+
+      /* 追问建议 chips(回答完成后由 LLM 生成,点击即发送) */
+      .chat-suggestions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .chat-suggestions[hidden] {
+        display: none;
+      }
+
+      .chat-suggestions button {
+        background: var(--db-surface-soft);
+        box-shadow: none;
+        color: var(--db-muted-strong);
+        font-size: 12.5px;
+        font-weight: 400;
+        min-height: 30px;
+        padding: 4px 14px;
+        white-space: normal;
+        text-align: left;
+      }
+
+      .chat-suggestions button:hover:not(:disabled) {
+        background: var(--db-accent-soft);
+        box-shadow: 0 4px 12px var(--db-shadow);
+        color: var(--db-accent-strong);
+      }
+
+      /* 未配置 LLM 时的追问引导条 */
+      .chat-guard {
+        align-items: center;
+        background: var(--db-warn-soft);
+        border-radius: var(--db-radius-s);
+        color: var(--db-warn-strong);
+        display: flex;
+        flex-wrap: wrap;
+        font-size: 12.5px;
+        gap: 8px;
+        justify-content: space-between;
+        line-height: 1.55;
+        padding: 10px 12px;
+      }
+
+      .chat-guard[hidden] {
+        display: none;
+      }
+
+      .chat-guard button {
+        background: var(--db-surface);
+        color: var(--db-warn-strong);
+        flex: 0 0 auto;
+        font-size: 12.5px;
+        min-height: 28px;
+        padding: 4px 14px;
+      }
+
+      .chat-guard button:hover:not(:disabled) {
+        background: var(--db-surface-raised);
+        color: var(--db-text);
       }
 
       /* ---------- 商品列表 ---------- */
@@ -1427,7 +1521,21 @@
           <div class="report markdown-content" id="report-view">暂无报告</div>
           <div class="conversation">
             <div class="messages" id="messages" aria-live="polite"></div>
+            <div
+              class="chat-suggestions"
+              id="chat-suggestions"
+              aria-label="追问建议"
+              hidden
+            ></div>
             <form class="chat-form" id="chat-form">
+              <div class="chat-guard" id="chat-guard" hidden>
+                <span class="chat-guard-copy">
+                  追问需要外部 LLM。采集与报告仍在本地完成。
+                </span>
+                <button class="secondary" id="chat-guard-open" type="button">
+                  打开 LLM 设置
+                </button>
+              </div>
               <div class="field">
                 <label for="chat-input">追问当前会话</label>
                 <textarea
@@ -1479,7 +1587,7 @@
             <input type="checkbox" id="llm-enabled" />
             <span class="toggle-copy">
               <strong>启用外部 LLM</strong>
-              <span class="helper">未配置时使用本地规则和澄清问题。</span>
+              <span class="helper">关闭后追问不可用；采集与报告不受影响。</span>
             </span>
           </label>
           <div class="field-grid provider-grid">
@@ -1526,6 +1634,8 @@
         currentSession: null,
         chatStreaming: false,
         reportRegenerating: false,
+        // 乐观初始值:避免已配置用户每次刷新时引导条闪现;loadLlmStatus 会校正
+        llmConfigured: true,
       };
 
       const $ = (id) => document.getElementById(id);
@@ -1606,6 +1716,7 @@
 
       $("llm-status").addEventListener("click", () => llmModal.open());
       $("llm-modal-close").addEventListener("click", () => llmModal.close());
+      $("chat-guard-open").addEventListener("click", () => llmModal.open());
 
       $("llm-modal").addEventListener("click", (event) => {
         if (event.target === $("llm-modal")) {
@@ -1992,8 +2103,14 @@
       }
 
       function updateChatSubmit() {
-        $("chat-submit").disabled = state.chatStreaming;
-        $("chat-input").disabled = state.chatStreaming;
+        // 追问强制外部 LLM:未配置时整个追问区禁用并显示引导
+        const gated = !state.llmConfigured;
+        $("chat-guard").hidden = !gated;
+        $("chat-submit").disabled = gated || state.chatStreaming;
+        $("chat-input").disabled = gated || state.chatStreaming;
+        $("chat-input").placeholder = gated
+          ? "配置外部 LLM 后可追问"
+          : "例如：这几款里哪一款更适合电影和游戏？";
       }
 
       function updateReportActions() {
@@ -2103,8 +2220,8 @@
         };
       }
 
-      async function streamChatResponse(content, assistantView) {
-        const response = await fetch(`/api/sessions/${state.currentSessionId}/messages/stream`, {
+      async function streamChatResponse(sessionId, content, assistantView) {
+        const response = await fetch(`/api/sessions/${sessionId}/messages/stream`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content }),
@@ -2113,19 +2230,21 @@
           throw new Error(await response.text());
         }
         const writer = createTypewriter(assistantView.content);
+        let turnFailed = false;
         const onEvent = (event) => {
           const payload = event.data ? JSON.parse(event.data) : {};
           if (event.type === "delta" && payload.content) {
             writer.push(payload.content);
           }
           if (event.type === "done") {
+            turnFailed = Boolean(payload.failed);
             assistantView.role.textContent = `assistant / ${payload.source || "local"}`;
           }
         };
         if (!response.body) {
           handleSseText(await response.text(), onEvent);
           await writer.finish();
-          return;
+          return turnFailed;
         }
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
@@ -2141,6 +2260,7 @@
         buffer += decoder.decode();
         handleSseText(buffer, onEvent);
         await writer.finish();
+        return turnFailed;
       }
 
       function renderSessionDetail() {
@@ -2202,6 +2322,7 @@
       }
 
       async function setCurrentSession(sessionId) {
+        clearChatSuggestions();
         await api(`/api/sessions/${sessionId}/current`, { method: "POST", body: "{}" });
         await refreshSessions();
       }
@@ -2233,10 +2354,12 @@
         $("llm-settings-summary").title = summary;
         $("privacy-notice").textContent = status.configured
           ? `外部分析已启用，商品数据可能发送到 ${status.provider_name}。`
-          : "默认仅本地分析。开启后只有追问会调用外部 Provider。";
+          : "采集与报告只在本地完成；追问需要配置外部 LLM。";
         $("privacy-notice").className = status.configured
           ? "privacy-note warning"
           : "privacy-note";
+        state.llmConfigured = Boolean(status.configured);
+        updateChatSubmit();
         $("llm-enabled").checked = Boolean(status.enabled);
         $("llm-provider").value = status.provider_name || "openai-compatible";
         $("llm-base-url").value = status.base_url || "";
@@ -2266,31 +2389,97 @@
         }
       });
 
-      $("chat-form").addEventListener("submit", async (event) => {
-        event.preventDefault();
+      // 请求代号:清空即作废所有在飞行的建议请求,防止旧轮次的 chips 混入新轮
+      let chatSuggestionsRequestId = 0;
+
+      function clearChatSuggestions() {
+        chatSuggestionsRequestId += 1;
+        const container = $("chat-suggestions");
+        container.hidden = true;
+        container.innerHTML = "";
+      }
+
+      // 回答完成后向 LLM 再要 3 个互不重复的追问建议;失败/过期一律静默
+      async function refreshChatSuggestions(sessionId) {
+        clearChatSuggestions();
+        const requestId = chatSuggestionsRequestId;
+        if (!state.llmConfigured || !sessionId) {
+          return;
+        }
+        try {
+          const payload = await api(
+            `/api/sessions/${sessionId}/suggestions`,
+            { method: "POST" },
+          );
+          if (
+            requestId !== chatSuggestionsRequestId ||
+            sessionId !== state.currentSessionId ||
+            state.chatStreaming
+          ) {
+            return;
+          }
+          const suggestions = Array.isArray(payload.suggestions)
+            ? payload.suggestions
+            : [];
+          if (suggestions.length === 0) {
+            return;
+          }
+          const container = $("chat-suggestions");
+          for (const suggestion of suggestions) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = suggestion;
+            button.addEventListener("click", () => {
+              sendChatMessage(suggestion);
+            });
+            container.appendChild(button);
+          }
+          container.hidden = false;
+        } catch {
+          /* 追问建议是增强能力,失败不打扰 */
+        }
+      }
+
+      async function sendChatMessage(content) {
         if (!state.currentSessionId) {
           setMessage("请先选择或创建会话", true);
           return;
         }
-        if (state.chatStreaming) {
+        if (!state.llmConfigured) {
+          llmModal.open();
           return;
         }
-        const content = $("chat-input").value.trim();
-        if (!content) {
+        if (state.chatStreaming || !content) {
           return;
         }
+        // 锚定发起时会话:流式期间用户可能切会话,回答与建议都必须跟随原会话
+        const sessionId = state.currentSessionId;
         state.chatStreaming = true;
         updateChatSubmit();
+        clearChatSuggestions();
         appendChatMessage({ role: "user", content });
         $("chat-input").value = "";
         const assistantView = appendChatMessage(
           { role: "assistant", content: "", source: "生成中" },
           { streaming: true },
         );
+        // 首字到达前的等待指示;typewriter 首次渲染会整体覆盖此内容
+        assistantView.content.innerHTML =
+          '<p class="thinking-hint">思考中<span class="thinking-dots">' +
+          "<span>.</span><span>.</span><span>.</span></span></p>";
+        let answered = false;
         try {
-          await streamChatResponse(content, assistantView);
+          const turnFailed = await streamChatResponse(
+            sessionId,
+            content,
+            assistantView,
+          );
           assistantView.item.classList.remove("streaming");
-          await loadSession(state.currentSessionId);
+          if (sessionId === state.currentSessionId) {
+            await loadSession(sessionId);
+          }
+          // LLM 失败的轮次不再请求建议,避免立刻重打不可用的 provider
+          answered = !turnFailed;
         } catch (error) {
           assistantView.item.classList.remove("streaming");
           assistantView.role.textContent = "assistant / error";
@@ -2300,6 +2489,14 @@
           state.chatStreaming = false;
           updateChatSubmit();
         }
+        if (answered && sessionId === state.currentSessionId) {
+          await refreshChatSuggestions(sessionId);
+        }
+      }
+
+      $("chat-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        sendChatMessage($("chat-input").value.trim());
       });
 
       $("llm-test-button").addEventListener("click", async () => {
