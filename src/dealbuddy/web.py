@@ -979,7 +979,7 @@ def create_app(
 ) -> FastAPI:
     resolved_store = store or SessionStore()
     resolved_config_store = config_store or ConfigStore()
-    app = FastAPI(title="DealBuddy", version="0.8.0")
+    app = FastAPI(title="DealBuddy", version="0.9.0")
 
     @app.middleware("http")
     async def cors_for_extension_intake(
@@ -1222,7 +1222,7 @@ def create_app(
                 result: object = {
                     "protocolVersion": "2025-06-18",
                     "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "dealbuddy", "version": "0.8.0"},
+                    "serverInfo": {"name": "dealbuddy", "version": "0.9.0"},
                 }
             elif method == "tools/list":
                 result = {"tools": _mcp_tool_schemas()}
