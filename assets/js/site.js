@@ -2,6 +2,42 @@
 (function () {
   "use strict";
 
+  /* 主题三态(自动/浅色/深色),与工作台同机制;head 内联脚本已提前应用避免闪烁 */
+  var THEME_KEY = "dealbuddy.theme";
+  var themeButtons = Array.prototype.slice.call(
+    document.querySelectorAll("[data-theme-choice]")
+  );
+  if (themeButtons.length) {
+    var applyTheme = function (choice) {
+      if (choice === "light" || choice === "dark") {
+        document.documentElement.setAttribute("data-theme", choice);
+      } else {
+        document.documentElement.removeAttribute("data-theme");
+      }
+      themeButtons.forEach(function (btn) {
+        btn.setAttribute(
+          "aria-pressed",
+          String(btn.getAttribute("data-theme-choice") === choice)
+        );
+      });
+    };
+    var saved = null;
+    try {
+      saved = localStorage.getItem(THEME_KEY);
+    } catch (e) { /* 忽略 */ }
+    applyTheme(saved === "light" || saved === "dark" ? saved : "auto");
+    themeButtons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var next = btn.getAttribute("data-theme-choice");
+        try {
+          if (next === "auto") localStorage.removeItem(THEME_KEY);
+          else localStorage.setItem(THEME_KEY, next);
+        } catch (e) { /* 忽略 */ }
+        applyTheme(next);
+      });
+    });
+  }
+
   /* 代码块复制按钮（无 JS 即不出现，代码仍可手动选中复制） */
   if (navigator.clipboard && window.isSecureContext) {
     document.querySelectorAll("pre.code").forEach(function (pre) {
