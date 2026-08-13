@@ -195,10 +195,11 @@ def test_web_can_delete_session_offer_and_rebuild_report(
     assert "海信 65E7N Pro" not in session["report_markdown"]
 
 
-def test_web_chat_uses_local_fallback_and_persists_messages(
+def test_web_chat_requires_llm_and_keeps_session_clean(
     tmp_path,
     monkeypatch,
 ) -> None:
+    """追问强制外部 LLM(X8):未配置时两个消息端点都 400,且不落任何消息。"""
     monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
     client = TestClient(create_app())
     session_id = client.post(
@@ -211,13 +212,18 @@ def test_web_chat_uses_local_fallback_and_persists_messages(
         f"/api/sessions/{session_id}/messages",
         json={"content": "这几个怎么选？"},
     )
+    assert response.status_code == 400
+    assert "LLM" in response.json()["detail"]
 
-    assert response.status_code == 200
-    messages = response.json()["messages"]
-    assert [message["role"] for message in messages] == ["user", "assistant"]
-    assert "本地规则" in messages[-1]["content"]
+    stream_response = client.post(
+        f"/api/sessions/{session_id}/messages/stream",
+        json={"content": "这几个怎么选？"},
+    )
+    assert stream_response.status_code == 400
+    assert "LLM" in stream_response.json()["detail"]
+
     reloaded = SessionStore().load(session_id)
-    assert [message["role"] for message in reloaded.messages] == ["user", "assistant"]
+    assert reloaded.messages == []
 
 
 def test_web_chat_streams_llm_delta_chunks_and_persists_messages(
@@ -287,10 +293,13 @@ def test_web_regenerates_report_with_conversation_and_increments_version(
         json={"category": "电视", "request": "预算5000，65英寸"},
     ).json()["session"]["session_id"]
     client.post("/api/current/offers", json=sample_payload(title="TCL Q10"))
-    client.post(
-        f"/api/sessions/{session_id}/messages",
-        json={"content": "主要连接 NAS 使用，自建了 Emby 影视库"},
+    # 追问已强制外部 LLM,对话上下文直接写入会话(重新生成报告不依赖消息来源)
+    store = SessionStore()
+    session_model = store.load(session_id)
+    session_model.messages.append(
+        {"role": "user", "content": "主要连接 NAS 使用，自建了 Emby 影视库"}
     )
+    store.save(session_model)
 
     response = client.post(f"/api/sessions/{session_id}/report/regenerate")
 

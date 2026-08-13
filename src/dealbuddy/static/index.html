@@ -1018,6 +1018,39 @@
         min-height: 68px;
       }
 
+      /* 未配置 LLM 时的追问引导条 */
+      .chat-guard {
+        align-items: center;
+        background: var(--db-warn-soft);
+        border-radius: var(--db-radius-s);
+        color: var(--db-warn-strong);
+        display: flex;
+        flex-wrap: wrap;
+        font-size: 12.5px;
+        gap: 8px;
+        justify-content: space-between;
+        line-height: 1.55;
+        padding: 10px 12px;
+      }
+
+      .chat-guard[hidden] {
+        display: none;
+      }
+
+      .chat-guard button {
+        background: var(--db-surface);
+        color: var(--db-warn-strong);
+        flex: 0 0 auto;
+        font-size: 12.5px;
+        min-height: 28px;
+        padding: 4px 14px;
+      }
+
+      .chat-guard button:hover:not(:disabled) {
+        background: var(--db-surface-raised);
+        color: var(--db-text);
+      }
+
       /* ---------- 商品列表 ---------- */
       .offer-list {
         display: flex;
@@ -1428,6 +1461,14 @@
           <div class="conversation">
             <div class="messages" id="messages" aria-live="polite"></div>
             <form class="chat-form" id="chat-form">
+              <div class="chat-guard" id="chat-guard" hidden>
+                <span class="chat-guard-copy">
+                  追问需要外部 LLM。采集与报告仍在本地完成。
+                </span>
+                <button class="secondary" id="chat-guard-open" type="button">
+                  打开 LLM 设置
+                </button>
+              </div>
               <div class="field">
                 <label for="chat-input">追问当前会话</label>
                 <textarea
@@ -1479,7 +1520,7 @@
             <input type="checkbox" id="llm-enabled" />
             <span class="toggle-copy">
               <strong>启用外部 LLM</strong>
-              <span class="helper">未配置时使用本地规则和澄清问题。</span>
+              <span class="helper">关闭后追问不可用；采集与报告不受影响。</span>
             </span>
           </label>
           <div class="field-grid provider-grid">
@@ -1526,6 +1567,8 @@
         currentSession: null,
         chatStreaming: false,
         reportRegenerating: false,
+        // 乐观初始值:避免已配置用户每次刷新时引导条闪现;loadLlmStatus 会校正
+        llmConfigured: true,
       };
 
       const $ = (id) => document.getElementById(id);
@@ -1606,6 +1649,7 @@
 
       $("llm-status").addEventListener("click", () => llmModal.open());
       $("llm-modal-close").addEventListener("click", () => llmModal.close());
+      $("chat-guard-open").addEventListener("click", () => llmModal.open());
 
       $("llm-modal").addEventListener("click", (event) => {
         if (event.target === $("llm-modal")) {
@@ -1992,8 +2036,14 @@
       }
 
       function updateChatSubmit() {
-        $("chat-submit").disabled = state.chatStreaming;
-        $("chat-input").disabled = state.chatStreaming;
+        // 追问强制外部 LLM:未配置时整个追问区禁用并显示引导
+        const gated = !state.llmConfigured;
+        $("chat-guard").hidden = !gated;
+        $("chat-submit").disabled = gated || state.chatStreaming;
+        $("chat-input").disabled = gated || state.chatStreaming;
+        $("chat-input").placeholder = gated
+          ? "配置外部 LLM 后可追问"
+          : "例如：这几款里哪一款更适合电影和游戏？";
       }
 
       function updateReportActions() {
@@ -2233,10 +2283,12 @@
         $("llm-settings-summary").title = summary;
         $("privacy-notice").textContent = status.configured
           ? `外部分析已启用，商品数据可能发送到 ${status.provider_name}。`
-          : "默认仅本地分析。开启后只有追问会调用外部 Provider。";
+          : "采集与报告只在本地完成；追问需要配置外部 LLM。";
         $("privacy-notice").className = status.configured
           ? "privacy-note warning"
           : "privacy-note";
+        state.llmConfigured = Boolean(status.configured);
+        updateChatSubmit();
         $("llm-enabled").checked = Boolean(status.enabled);
         $("llm-provider").value = status.provider_name || "openai-compatible";
         $("llm-base-url").value = status.base_url || "";
@@ -2270,6 +2322,10 @@
         event.preventDefault();
         if (!state.currentSessionId) {
           setMessage("请先选择或创建会话", true);
+          return;
+        }
+        if (!state.llmConfigured) {
+          llmModal.open();
           return;
         }
         if (state.chatStreaming) {

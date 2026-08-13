@@ -188,23 +188,18 @@ def build_session_report_with_context(session: ShoppingSession) -> str:
     return _append_conversation_to_report(report, _conversation_context(session))
 
 
-def build_local_answer(session: ShoppingSession, content: str) -> str:
-    offer_count = len(session.verified_offers)
-    if offer_count == 0:
-        return (
-            "本地规则分析：当前会话还没有采集商品。先用浏览器扩展采集 2-4 个候选后，"
-            "我可以基于页面价格、SKU、规格和报告帮你比较。"
-        )
-    report_hint = "报告已生成" if session.report_markdown else "报告尚未生成"
-    top_titles = [
-        VerifiedOffer.model_validate(item).title for item in session.verified_offers[:3]
-    ]
-    return (
-        f"本地规则分析：当前已采集 {offer_count} 个商品，{report_hint}。"
-        f"这轮问题是“{content}”。建议先看报告里的“最符合需求”和“综合性价比”，"
-        f"再重点核对这些候选：{'；'.join(top_titles)}。"
-        "如已开启 LLM Provider，对话区会明确提示并使用外部模型做更自然的追问分析。"
-    )
+# 追问强制走外部 LLM(2026-08 X8 轮):本地规则回答已下线,采集/报告仍全在本地。
+class LLMNotConfiguredError(ValueError):
+    """未配置 LLM 时的追问请求;继承 ValueError 以复用 MCP 层的错误转换。"""
+
+
+LLM_REQUIRED_MESSAGE = (
+    "追问需要外部 LLM。点工作台右上角「LLM」完成配置后再试；采集与报告不受影响。"
+)
+
+
+def _llm_failure_answer(exc: Exception) -> str:
+    return f"LLM Provider 调用失败：{exc}。可点右上角「LLM」检查设置后重试。"
 
 
 def _llm_chat_payload(
@@ -459,28 +454,21 @@ def stream_session_answer_events(
     session_id: str,
     content: str,
 ) -> Iterator[str]:
+    llm = config_store.load().llm
+    if not llm.configured:
+        # 防御:端点已前置拦截;此处兜底避免生成器被直接复用时落消息
+        raise LLMNotConfiguredError(LLM_REQUIRED_MESSAGE)
     _append_message(store, session_id, role="user", content=content)
     yield _sse("user", {"role": "user", "content": content})
     session = store.load(session_id)
-    llm = config_store.load().llm
-    source: Literal["local", "llm"] = "local"
+    source: Literal["local", "llm"] = "llm"
     answer = ""
-    if llm.configured:
-        source = "llm"
-        try:
-            for chunk in call_llm_provider_stream(llm, session, content):
-                answer += chunk
-                yield _sse("delta", {"content": chunk, "source": source})
-        except Exception as exc:  # noqa: BLE001
-            source = "local"
-            answer = (
-                f"{build_local_answer(session, content)}\n\n"
-                f"LLM Provider 调用失败：{exc}"
-            )
-            for chunk in _typewriter_chunks(answer):
-                yield _sse("delta", {"content": chunk, "source": source})
-    else:
-        answer = build_local_answer(session, content)
+    try:
+        for chunk in call_llm_provider_stream(llm, session, content):
+            answer += chunk
+            yield _sse("delta", {"content": chunk, "source": source})
+    except Exception as exc:  # noqa: BLE001
+        answer = _llm_failure_answer(exc)
         for chunk in _typewriter_chunks(answer):
             yield _sse("delta", {"content": chunk, "source": source})
     session = _append_message(
@@ -684,21 +672,16 @@ def answer_session(
     session_id: str,
     content: str,
 ) -> ShoppingSession:
+    llm = config_store.load().llm
+    if not llm.configured:
+        raise LLMNotConfiguredError(LLM_REQUIRED_MESSAGE)
     _append_message(store, session_id, role="user", content=content)
     session = store.load(session_id)
-    llm = config_store.load().llm
-    source: Literal["local", "llm"] = "local"
-    if llm.configured:
-        try:
-            answer = call_llm_provider(llm, session, content)
-            source = "llm"
-        except Exception as exc:  # noqa: BLE001
-            answer = (
-                f"{build_local_answer(session, content)}\n\n"
-                f"LLM Provider 调用失败：{exc}"
-            )
-    else:
-        answer = build_local_answer(session, content)
+    source: Literal["local", "llm"] = "llm"
+    try:
+        answer = call_llm_provider(llm, session, content)
+    except Exception as exc:  # noqa: BLE001
+        answer = _llm_failure_answer(exc)
     return _append_message(
         store,
         session_id,
@@ -932,7 +915,7 @@ def create_app(
 ) -> FastAPI:
     resolved_store = store or SessionStore()
     resolved_config_store = config_store or ConfigStore()
-    app = FastAPI(title="DealBuddy", version="0.4.0")
+    app = FastAPI(title="DealBuddy", version="0.5.0")
 
     @app.middleware("http")
     async def cors_for_extension_intake(
@@ -1074,6 +1057,8 @@ def create_app(
                 session_id,
                 payload.content.strip(),
             )
+        except LLMNotConfiguredError as exc:
+            raise HTTPException(400, str(exc)) from exc
         except FileNotFoundError as exc:
             raise HTTPException(404, str(exc)) from exc
         return {"session_id": session.session_id, "messages": session.messages}
@@ -1084,6 +1069,8 @@ def create_app(
         payload: ChatRequest,
     ) -> StreamingResponse:
         content = payload.content.strip()
+        if not resolved_config_store.load().llm.configured:
+            raise HTTPException(400, LLM_REQUIRED_MESSAGE)
         try:
             resolved_store.load(session_id)
         except FileNotFoundError as exc:
@@ -1155,7 +1142,7 @@ def create_app(
                 result: object = {
                     "protocolVersion": "2025-06-18",
                     "capabilities": {"tools": {}},
-                    "serverInfo": {"name": "dealbuddy", "version": "0.4.0"},
+                    "serverInfo": {"name": "dealbuddy", "version": "0.5.0"},
                 }
             elif method == "tools/list":
                 result = {"tools": _mcp_tool_schemas()}

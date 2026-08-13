@@ -118,6 +118,8 @@ def test_mcp_session_tool_flow_uses_local_analysis(tmp_path, monkeypatch) -> Non
         ),
     )
 
+    # 追问强制外部 LLM(X8):未配置时 ask_session 返回 JSON-RPC 错误而非本地规则回答
     assert answer.status_code == 200
-    content = answer.json()["result"]["structuredContent"]["messages"][-1]["content"]
-    assert "本地规则" in content
+    error = answer.json()["error"]
+    assert error["code"] == -32602
+    assert "LLM" in error["message"]
