@@ -6,7 +6,19 @@
     <title>DealBuddy 购物搭子</title>
     <link rel="stylesheet" href="tokens.css">
     <style>
-      /* 柔和亲和风:token 来自 tokens.css(与工作台同步),此处只写组件样式 */
+      /* 柔和亲和风:token 来自 tokens.css(与工作台同步),此处只写组件样式。
+         color-scheme 是文档级配置,由本文档自理(tokens.css 为纯变量文件,
+         注入电商宿主页时不得改写宿主配色方案)。 */
+      :root {
+        color-scheme: light;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+        }
+      }
+
       * {
         box-sizing: border-box;
       }
