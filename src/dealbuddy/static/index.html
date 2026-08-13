@@ -2372,33 +2372,48 @@
         return turnFailed;
       }
 
+      // 上次渲染的会话:快照只在同会话重绘时套用,切会话不跨会话泄漏状态
+      let renderedSessionId = null;
+
       function renderSessionDetail() {
         const session = state.currentSession;
         const offers = session?.verified_offers || [];
         updateReportActions();
         $("offer-count").textContent = `${offers.length} 个商品`;
 
-        // 轮询重绘前采集 UI 状态,重绘后按商品 URL 还原,避免打断用户正在看的内容
+        // 同会话重绘前采集 UI 状态,重绘后按商品 URL 还原,避免打断用户正在看的内容
         const offerList = $("offer-list");
         const messagesBox = $("messages");
         const reportView = $("report-view");
-        const openUrls = new Set(
-          Array.from(
-            offerList.querySelectorAll("details.offer-card[open]"),
-            (card) => card.dataset.url,
-          ),
-        );
-        const focusedCardUrl = offerList.contains(document.activeElement)
-          ? document.activeElement.closest("details.offer-card")?.dataset.url
-          : null;
-        const messagesAtBottom =
-          messagesBox.scrollTop + messagesBox.clientHeight >=
-          messagesBox.scrollHeight - 4;
-        const scrollSnapshot = {
-          offers: offerList.scrollTop,
-          messages: messagesBox.scrollTop,
-          report: reportView.scrollTop,
-        };
+        const sameSession =
+          Boolean(session) && session.session_id === renderedSessionId;
+        renderedSessionId = session?.session_id || null;
+
+        const openUrls = new Set();
+        const bodyScrollByUrl = new Map();
+        let focusedCardUrl = null;
+        let messagesAtBottom = true;
+        const scrollSnapshot = { offers: 0, messages: 0, report: 0 };
+        if (sameSession) {
+          for (const card of offerList.querySelectorAll(
+            "details.offer-card[open]",
+          )) {
+            openUrls.add(card.dataset.url);
+            const body = card.querySelector(".offer-body");
+            if (body && body.scrollTop > 0) {
+              bodyScrollByUrl.set(card.dataset.url, body.scrollTop);
+            }
+          }
+          focusedCardUrl = offerList.contains(document.activeElement)
+            ? document.activeElement.closest("details.offer-card")?.dataset.url
+            : null;
+          messagesAtBottom =
+            messagesBox.scrollTop + messagesBox.clientHeight >=
+            messagesBox.scrollHeight - 4;
+          scrollSnapshot.offers = offerList.scrollTop;
+          scrollSnapshot.messages = messagesBox.scrollTop;
+          scrollSnapshot.report = reportView.scrollTop;
+        }
 
         offerList.innerHTML = offers.length
           ? offers.map((offer, index) => renderOfferCard(offer, index)).join("")
@@ -2413,12 +2428,25 @@
         for (const card of offerList.querySelectorAll("details.offer-card")) {
           if (openUrls.has(card.dataset.url)) {
             card.open = true;
-          }
-          if (focusedCardUrl && card.dataset.url === focusedCardUrl) {
-            card.querySelector("summary")?.focus();
+            const bodyTop = bodyScrollByUrl.get(card.dataset.url);
+            if (bodyTop) {
+              const body = card.querySelector(".offer-body");
+              if (body) {
+                body.scrollTop = bodyTop;
+              }
+            }
           }
         }
         offerList.scrollTop = scrollSnapshot.offers;
+        // 焦点最后归还:重采集会把同商品移到列表尾,focus 自带的滚动使其保持可见,
+        // 不能再被上面的绝对偏移覆盖
+        if (focusedCardUrl) {
+          offerList
+            .querySelector(
+              `details.offer-card[data-url="${CSS.escape(focusedCardUrl)}"] summary`,
+            )
+            ?.focus();
+        }
 
         reportView.innerHTML = renderMarkdown(session?.report_markdown || "");
         reportView.scrollTop = scrollSnapshot.report;
