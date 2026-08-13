@@ -2,6 +2,18 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## [0.5.1] - 2026-08-13
+
+### Changed
+
+- README 面向新用户完全重写:做什么/不做什么开篇、快速开始新增「让 Agent 帮你装」
+  提示词、三件套分述、价格口径表(含模型属性列)、追问与 LLM 的 0.5.0 语义、
+  数据边界与开发章节。
+- Agent Skill(`skills/dealbuddy`)新增 First-Time Setup:首次安装链路
+  (clone / uv sync / 下载 Releases latest 扩展)与服务健康检测;明确浏览器加载
+  扩展由用户手动完成。
+- 落地页(website 分支)同步重做,下载入口改指 Releases latest。
+
 ## [0.5.0] - 2026-08-13
 
 ### Added
