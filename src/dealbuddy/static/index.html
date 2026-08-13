@@ -808,6 +808,55 @@
         grid-column: 1 / -1;
       }
 
+      /* ---------- 全局 toast(z-index 层级见 tokens.md:toast=200) ---------- */
+      .toast-stack {
+        display: grid;
+        gap: 10px;
+        position: fixed;
+        right: 20px;
+        top: 84px;
+        width: min(360px, calc(100vw - 40px));
+        z-index: 200;
+      }
+
+      .toast {
+        animation: toast-in 220ms ease;
+        background: var(--db-surface-raised);
+        border-left: 3px solid var(--db-accent);
+        border-radius: var(--db-radius-s);
+        box-shadow: 0 14px 30px var(--db-shadow-deep), 0 0 0 1px var(--db-ring);
+        color: var(--db-text);
+        cursor: pointer;
+        font-size: 13.5px;
+        line-height: 1.55;
+        overflow-wrap: anywhere;
+        padding: 12px 16px 12px 14px;
+      }
+
+      .toast.error {
+        background: var(--db-danger-soft);
+        border-left-color: var(--db-danger);
+        color: var(--db-danger-strong);
+      }
+
+      .toast:focus-visible {
+        outline: 2px solid var(--db-accent-strong);
+        outline-offset: 2px;
+      }
+
+      .toast.leaving {
+        opacity: 0;
+        transform: translateX(10px);
+        transition: opacity 200ms ease, transform 200ms ease;
+      }
+
+      @keyframes toast-in {
+        from {
+          opacity: 0;
+          transform: translateY(-6px);
+        }
+      }
+
       /* ---------- 提示与语义色 ---------- */
       .notice {
         background: var(--db-surface-soft);
@@ -1385,6 +1434,11 @@
           position: static;
         }
 
+        .toast-stack {
+          right: 12px;
+          top: 12px;
+        }
+
         .header-inner {
           align-items: stretch;
           flex-direction: column;
@@ -1503,7 +1557,6 @@
           </form>
           <div class="session-list" id="session-list" aria-live="polite"></div>
 
-          <div class="notice" id="page-message"></div>
         </div>
       </section>
 
@@ -1564,6 +1617,8 @@
         </div>
       </section>
     </main>
+
+    <div class="toast-stack" id="toast-stack"></div>
 
     <div class="modal-backdrop" id="llm-modal" hidden>
       <div
@@ -1867,14 +1922,67 @@
           );
         }
         if (!response.ok) {
-          throw new Error(await response.text());
+          throw await readableApiError(response, path);
         }
         return response.json();
       }
 
+      // 非 OK 响应统一转为可读错误:页面只给 detail 人话,完整原始响应进控制台
+      async function readableApiError(response, path) {
+        const raw = await response.text();
+        let message = raw;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed.detail === "string") {
+            message = parsed.detail;
+          }
+        } catch {
+          /* 非 JSON 响应按原文展示 */
+        }
+        console.error(`API ${response.status} ${path}:`, raw);
+        return new Error(message);
+      }
+
+      // 全局提示:右上角 toast,自动消失、hover 暂停、点击关闭
+      function showToast(message, { level = "info", duration } = {}) {
+        const stack = $("toast-stack");
+        const toast = document.createElement("div");
+        toast.className = `toast ${level}`;
+        toast.setAttribute("role", level === "error" ? "alert" : "status");
+        toast.tabIndex = 0;
+        toast.setAttribute("aria-label", `${message}(按回车或 Esc 关闭)`);
+        toast.textContent = message;
+        stack.appendChild(toast);
+        while (stack.children.length > 4) {
+          stack.firstChild.remove();
+        }
+        const life = duration || (level === "error" ? 8000 : 4000);
+        let timer = null;
+        const dismiss = () => {
+          window.clearTimeout(timer);
+          toast.classList.add("leaving");
+          window.setTimeout(() => toast.remove(), 200);
+        };
+        const arm = () => {
+          timer = window.setTimeout(dismiss, life);
+        };
+        const hold = () => window.clearTimeout(timer);
+        toast.addEventListener("mouseenter", hold);
+        toast.addEventListener("mouseleave", arm);
+        toast.addEventListener("focus", hold);
+        toast.addEventListener("blur", arm);
+        toast.addEventListener("click", dismiss);
+        toast.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " " || event.key === "Escape") {
+            event.preventDefault();
+            dismiss();
+          }
+        });
+        arm();
+      }
+
       function setMessage(message, isError = false) {
-        $("page-message").textContent = message;
-        $("page-message").className = isError ? "notice error" : "notice";
+        showToast(message, { level: isError ? "error" : "info" });
       }
 
       function formatPrice(value) {
@@ -2221,13 +2329,14 @@
       }
 
       async function streamChatResponse(sessionId, content, assistantView) {
-        const response = await fetch(`/api/sessions/${sessionId}/messages/stream`, {
+        const streamPath = `/api/sessions/${sessionId}/messages/stream`;
+        const response = await fetch(streamPath, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content }),
         });
         if (!response.ok) {
-          throw new Error(await response.text());
+          throw await readableApiError(response, streamPath);
         }
         const writer = createTypewriter(assistantView.content);
         let turnFailed = false;
