@@ -2,6 +2,16 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## [0.7.0] - 2026-08-13
+
+### Changed
+
+- **扩展 popup 换肤为柔和亲和风**,并首次支持深色模式(跟随系统)。设计 token 抽为
+  `extension/dealbuddy-capture/tokens.css`(popup 引用),与工作台同一套色板;
+  popup 的动效补齐 `prefers-reduced-motion` 降级。
+- 新增 token 一致性测试:工作台与插件 tokens.css 的明暗两套变量逐值比对
+  (含工作台暗色双挂两处),漏同步任何一处发版门禁直接失败。
+
 ## [0.6.1] - 2026-08-13
 
 ### Fixed

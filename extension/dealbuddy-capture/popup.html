@@ -4,33 +4,42 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DealBuddy 购物搭子</title>
+    <link rel="stylesheet" href="tokens.css">
     <style>
+      /* 柔和亲和风:token 来自 tokens.css(与工作台同步),此处只写组件样式 */
+      * {
+        box-sizing: border-box;
+      }
+
       body {
         width: 360px;
         margin: 0;
         padding: 16px;
-        color: #172033;
-        font-family:
-          -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--db-bg);
+        color: var(--db-text);
+        font-family: var(--db-font-body);
+        font-size: 13.5px;
+        line-height: 1.55;
       }
 
       h1 {
         margin: 0 0 4px;
         font-size: 16px;
+        font-weight: 600;
       }
 
       .subtitle {
         margin: 0 0 14px;
-        color: #64748b;
+        color: var(--db-muted-strong);
         font-size: 12px;
         line-height: 1.5;
       }
 
       .card {
-        border: 1px solid #dbe3ef;
-        border-radius: 14px;
-        padding: 12px;
-        background: #fff;
+        background: var(--db-surface);
+        border-radius: var(--db-radius-s);
+        box-shadow: 0 6px 18px var(--db-shadow), 0 0 0 1px var(--db-ring);
+        padding: 14px;
       }
 
       .card + .card {
@@ -39,9 +48,9 @@
 
       .section-title {
         margin: 0 0 10px;
-        color: #0f172a;
+        color: var(--db-text);
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 600;
       }
 
       form {
@@ -52,14 +61,15 @@
 
       label {
         display: flex;
-        gap: 10px;
+        gap: 8px;
         align-items: center;
-        color: #334155;
-        font-size: 13px;
-        font-weight: 700;
+        color: var(--db-muted-strong);
+        font-size: 12.5px;
+        font-weight: 600;
       }
 
       input[type="checkbox"] {
+        accent-color: var(--db-accent);
         width: 16px;
         height: 16px;
       }
@@ -67,45 +77,85 @@
       input[type="number"],
       input[type="url"] {
         width: 84px;
-        border: 1px solid #cbd5e1;
-        border-radius: 8px;
-        padding: 7px 8px;
-        color: #0f172a;
-        font-size: 13px;
+        border: 2px solid var(--db-surface-soft);
+        border-radius: 10px;
+        padding: 6px 10px;
+        background: var(--db-surface-soft);
+        color: var(--db-text);
+        font: inherit;
+        font-size: 12.5px;
+        transition: border-color 200ms ease, background-color 200ms ease;
       }
 
       input[type="url"] {
-        box-sizing: border-box;
         width: 100%;
         margin-top: 8px;
       }
 
+      input[type="number"]:hover,
+      input[type="url"]:hover {
+        border-color: var(--db-line-strong);
+      }
+
+      input[type="number"]:focus-visible,
+      input[type="url"]:focus-visible {
+        outline: none;
+        border-color: var(--db-accent);
+        background: var(--db-surface);
+      }
+
       button {
         border: 0;
-        border-radius: 10px;
-        padding: 9px 11px;
-        background: #2563eb;
-        color: #fff;
+        border-radius: 999px;
+        padding: 8px 12px;
+        background: var(--db-accent);
+        color: var(--db-on-accent);
         cursor: pointer;
-        font-size: 13px;
-        font-weight: 800;
+        font: inherit;
+        font-size: 12.5px;
+        font-weight: 600;
+        box-shadow: 0 3px 10px var(--db-shadow);
+        transition:
+          background-color 200ms ease,
+          color 200ms ease,
+          box-shadow 200ms ease,
+          transform 200ms ease;
+      }
+
+      button:hover:not(:disabled) {
+        background: var(--db-accent-strong);
+        box-shadow: 0 6px 14px var(--db-shadow-deep);
+        transform: translateY(-1px);
+      }
+
+      button:active:not(:disabled) {
+        transform: none;
+        box-shadow: 0 2px 6px var(--db-shadow);
+      }
+
+      button:focus-visible {
+        outline: 2px solid var(--db-accent-strong);
+        outline-offset: 2px;
       }
 
       button.secondary {
-        border: 1px solid #cbd5e1;
-        background: #fff;
-        color: #334155;
+        background: var(--db-surface-soft);
+        color: var(--db-muted-strong);
+        box-shadow: none;
+      }
+
+      button.secondary:hover:not(:disabled) {
+        background: var(--db-line);
+        color: var(--db-text);
       }
 
       button:disabled {
-        background: #cbd5e1;
-        color: #64748b;
+        background: var(--db-surface-soft);
+        color: var(--db-muted);
         cursor: not-allowed;
-      }
-
-      button.secondary:disabled {
-        background: #f1f5f9;
-        color: #94a3b8;
+        box-shadow: none;
+        transform: none;
+        opacity: 0.7;
       }
 
       .field-row {
@@ -130,7 +180,7 @@
       .summary,
       .warning-list {
         margin: 0;
-        color: #64748b;
+        color: var(--db-muted);
         font-size: 12px;
         line-height: 1.5;
       }
@@ -140,16 +190,16 @@
       }
 
       .status.ok {
-        color: #15803d;
+        color: var(--db-accent-strong);
       }
 
       .status.error {
-        color: #b91c1c;
+        color: var(--db-danger-strong);
       }
 
       .summary {
         margin: 8px 0 10px;
-        color: #334155;
+        color: var(--db-muted-strong);
       }
 
       .warning-list {
@@ -160,11 +210,23 @@
       }
 
       .warning {
-        border: 1px solid #fed7aa;
         border-radius: 10px;
-        padding: 7px 9px;
-        background: #fff7ed;
-        color: #9a3412;
+        padding: 7px 10px;
+        background: var(--db-warn-soft);
+        color: var(--db-warn-strong);
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *,
+        *::before,
+        *::after {
+          transition-duration: 1ms !important;
+          animation-duration: 1ms !important;
+        }
+
+        button:hover:not(:disabled) {
+          transform: none;
+        }
       }
     </style>
   </head>
