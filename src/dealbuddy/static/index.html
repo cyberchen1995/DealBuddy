@@ -2092,7 +2092,7 @@
         const specs = objectEntries(offer.specs);
         const url = safeUrl(offer.url);
         return `
-          <details class="offer-card">
+          <details class="offer-card" data-url="${escapeHtml(text(offer.url))}">
             <summary class="offer-summary">
               <span class="offer-headline">
                 <a href="${escapeHtml(url)}" target="_blank" rel="noreferrer">
@@ -2377,7 +2377,30 @@
         const offers = session?.verified_offers || [];
         updateReportActions();
         $("offer-count").textContent = `${offers.length} 个商品`;
-        $("offer-list").innerHTML = offers.length
+
+        // 轮询重绘前采集 UI 状态,重绘后按商品 URL 还原,避免打断用户正在看的内容
+        const offerList = $("offer-list");
+        const messagesBox = $("messages");
+        const reportView = $("report-view");
+        const openUrls = new Set(
+          Array.from(
+            offerList.querySelectorAll("details.offer-card[open]"),
+            (card) => card.dataset.url,
+          ),
+        );
+        const focusedCardUrl = offerList.contains(document.activeElement)
+          ? document.activeElement.closest("details.offer-card")?.dataset.url
+          : null;
+        const messagesAtBottom =
+          messagesBox.scrollTop + messagesBox.clientHeight >=
+          messagesBox.scrollHeight - 4;
+        const scrollSnapshot = {
+          offers: offerList.scrollTop,
+          messages: messagesBox.scrollTop,
+          report: reportView.scrollTop,
+        };
+
+        offerList.innerHTML = offers.length
           ? offers.map((offer, index) => renderOfferCard(offer, index)).join("")
           : `
             <div class="empty-state">
@@ -2387,11 +2410,23 @@
               </div>
             </div>
           `;
-        $("report-view").innerHTML = renderMarkdown(session?.report_markdown || "");
-        $("messages").innerHTML = "";
+        for (const card of offerList.querySelectorAll("details.offer-card")) {
+          if (openUrls.has(card.dataset.url)) {
+            card.open = true;
+          }
+          if (focusedCardUrl && card.dataset.url === focusedCardUrl) {
+            card.querySelector("summary")?.focus();
+          }
+        }
+        offerList.scrollTop = scrollSnapshot.offers;
+
+        reportView.innerHTML = renderMarkdown(session?.report_markdown || "");
+        reportView.scrollTop = scrollSnapshot.report;
+
+        messagesBox.innerHTML = "";
         const messages = session?.messages || [];
         if (messages.length === 0) {
-          $("messages").innerHTML = `
+          messagesBox.innerHTML = `
             <div class="empty-state compact">
               <div>
                 <div class="empty-title">还没有追问</div>
@@ -2403,6 +2438,10 @@
         }
         for (const message of messages) {
           renderChatMessage(message);
+        }
+        // 正在回看历史时不拽到底;贴底时保持贴底(新消息可见)
+        if (!messagesAtBottom) {
+          messagesBox.scrollTop = scrollSnapshot.messages;
         }
       }
 
