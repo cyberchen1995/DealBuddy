@@ -202,6 +202,54 @@ def _llm_failure_answer(exc: Exception) -> str:
     return f"LLM Provider 调用失败：{exc}。可点右上角「LLM」检查设置后重试。"
 
 
+def call_llm_chat_suggestions(
+    settings: LLMSettings,
+    session: ShoppingSession,
+) -> list[str]:
+    """回答完成后追加生成 3 个互不重复的追问建议(X9)。"""
+    prompt = {
+        "model": settings.model,
+        "messages": [
+            {
+                "role": "system",
+                "content": (
+                    "你是 DealBuddy 的追问建议器。"
+                    "基于报告与最近对话，生成 3 个用户接下来可能想问的中文追问。"
+                    "三个角度必须互不重复：一个问参数或规格差异，"
+                    "一个问价格或优惠条件，一个问使用场景取舍。"
+                    "每个不超过 20 字，口语化。"
+                    "价格只能说「估算应付」，不要用「结算价」「到手价」。"
+                    '只返回 JSON：{"suggestions":["问题1","问题2","问题3"]}'
+                ),
+            },
+            {
+                "role": "user",
+                "content": json.dumps(
+                    {
+                        "requirements": session.requirements.model_dump(mode="json"),
+                        "report": session.report_markdown,
+                        "conversation": _conversation_context(session)[-6:],
+                    },
+                    ensure_ascii=False,
+                ),
+            },
+        ],
+    }
+    http_request = _llm_request(settings, prompt)
+    with urlrequest.urlopen(http_request, timeout=20) as response:
+        payload = json.loads(response.read().decode("utf-8"))
+    content = str(payload["choices"][0]["message"]["content"])
+    parsed = _parse_llm_json_content(content)
+    entries = parsed.get("suggestions") if isinstance(parsed, dict) else parsed
+    suggestions: list[str] = []
+    if isinstance(entries, list):
+        for entry in entries:
+            text_value = str(entry or "").strip()
+            if text_value and text_value not in suggestions:
+                suggestions.append(text_value)
+    return suggestions[:3]
+
+
 def _llm_chat_payload(
     settings: LLMSettings,
     session: ShoppingSession,
@@ -1085,6 +1133,22 @@ def create_app(
             media_type="text/event-stream",
             headers={"Cache-Control": "no-cache"},
         )
+
+    @app.post("/api/sessions/{session_id}/suggestions")
+    def post_suggestions(session_id: str) -> dict[str, object]:
+        llm = resolved_config_store.load().llm
+        if not llm.configured:
+            raise HTTPException(400, LLM_REQUIRED_MESSAGE)
+        try:
+            session = resolved_store.load(session_id)
+        except FileNotFoundError as exc:
+            raise HTTPException(404, str(exc)) from exc
+        try:
+            suggestions = call_llm_chat_suggestions(llm, session)
+        except Exception:  # noqa: BLE001
+            # 追问建议是增强能力,失败静默返回空,不打断主对话
+            suggestions = []
+        return {"session_id": session_id, "suggestions": suggestions}
 
     @app.get("/api/settings/llm")
     def get_llm_settings() -> dict[str, object]:

@@ -195,6 +195,69 @@ def test_web_can_delete_session_offer_and_rebuild_report(
     assert "海信 65E7N Pro" not in session["report_markdown"]
 
 
+def test_web_chat_suggestions_endpoint(tmp_path, monkeypatch) -> None:
+    """追问建议(X9):未配置 400;配置后返回去重的 3 条;LLM 失败静默返回空。"""
+    monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
+    client = TestClient(create_app())
+    session_id = client.post(
+        "/api/sessions",
+        json={"category": "电视", "request": "预算5000，65英寸"},
+    ).json()["session"]["session_id"]
+
+    denied = client.post(f"/api/sessions/{session_id}/suggestions")
+    assert denied.status_code == 400
+    assert "LLM" in denied.json()["detail"]
+
+    client.post(
+        "/api/settings/llm",
+        json={
+            "enabled": True,
+            "provider_name": "openai-compatible",
+            "base_url": "https://api.example.test/v1/chat/completions",
+            "model": "test-model",
+            "api_key": "sk-test",
+        },
+    )
+
+    def fake_urlopen(request: object, timeout: int) -> FakeLLMResponse:
+        return FakeLLMResponse(
+            {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "suggestions": [
+                                        "144Hz 和 165Hz 差别大吗？",
+                                        "144Hz 和 165Hz 差别大吗？",
+                                        "有店铺券的估算应付是多少？",
+                                        "卧室 3 米观距选 50 还是 55 英寸？",
+                                    ]
+                                },
+                                ensure_ascii=False,
+                            )
+                        }
+                    }
+                ]
+            }
+        )
+
+    monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", fake_urlopen)
+    ok = client.post(f"/api/sessions/{session_id}/suggestions")
+    assert ok.status_code == 200
+    suggestions = ok.json()["suggestions"]
+    assert len(suggestions) == 3
+    assert len(set(suggestions)) == 3
+
+    def broken_urlopen(request: object, timeout: int) -> FakeLLMResponse:
+        raise OSError("connection refused")
+
+    monkeypatch.setattr("dealbuddy.web.urlrequest.urlopen", broken_urlopen)
+    degraded = client.post(f"/api/sessions/{session_id}/suggestions")
+    assert degraded.status_code == 200
+    assert degraded.json()["suggestions"] == []
+
+
 def test_web_chat_requires_llm_and_keeps_session_clean(
     tmp_path,
     monkeypatch,
