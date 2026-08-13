@@ -839,6 +839,11 @@
         color: var(--db-danger-strong);
       }
 
+      .toast:focus-visible {
+        outline: 2px solid var(--db-accent-strong);
+        outline-offset: 2px;
+      }
+
       .toast.leaving {
         opacity: 0;
         transform: translateX(10px);
@@ -1917,21 +1922,25 @@
           );
         }
         if (!response.ok) {
-          const raw = await response.text();
-          let message = raw;
-          try {
-            const parsed = JSON.parse(raw);
-            if (parsed && typeof parsed.detail === "string") {
-              message = parsed.detail;
-            }
-          } catch {
-            /* 非 JSON 响应按原文展示 */
-          }
-          // 完整原始响应进控制台供排查,页面上只给人话
-          console.error(`API ${response.status} ${path}:`, raw);
-          throw new Error(message);
+          throw await readableApiError(response, path);
         }
         return response.json();
+      }
+
+      // 非 OK 响应统一转为可读错误:页面只给 detail 人话,完整原始响应进控制台
+      async function readableApiError(response, path) {
+        const raw = await response.text();
+        let message = raw;
+        try {
+          const parsed = JSON.parse(raw);
+          if (parsed && typeof parsed.detail === "string") {
+            message = parsed.detail;
+          }
+        } catch {
+          /* 非 JSON 响应按原文展示 */
+        }
+        console.error(`API ${response.status} ${path}:`, raw);
+        return new Error(message);
       }
 
       // 全局提示:右上角 toast,自动消失、hover 暂停、点击关闭
@@ -1940,6 +1949,8 @@
         const toast = document.createElement("div");
         toast.className = `toast ${level}`;
         toast.setAttribute("role", level === "error" ? "alert" : "status");
+        toast.tabIndex = 0;
+        toast.setAttribute("aria-label", `${message}(按回车或 Esc 关闭)`);
         toast.textContent = message;
         stack.appendChild(toast);
         while (stack.children.length > 4) {
@@ -1948,17 +1959,24 @@
         const life = duration || (level === "error" ? 8000 : 4000);
         let timer = null;
         const dismiss = () => {
+          window.clearTimeout(timer);
           toast.classList.add("leaving");
           window.setTimeout(() => toast.remove(), 200);
         };
         const arm = () => {
           timer = window.setTimeout(dismiss, life);
         };
-        toast.addEventListener("mouseenter", () => window.clearTimeout(timer));
+        const hold = () => window.clearTimeout(timer);
+        toast.addEventListener("mouseenter", hold);
         toast.addEventListener("mouseleave", arm);
-        toast.addEventListener("click", () => {
-          window.clearTimeout(timer);
-          dismiss();
+        toast.addEventListener("focus", hold);
+        toast.addEventListener("blur", arm);
+        toast.addEventListener("click", dismiss);
+        toast.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " " || event.key === "Escape") {
+            event.preventDefault();
+            dismiss();
+          }
         });
         arm();
       }
@@ -2311,13 +2329,14 @@
       }
 
       async function streamChatResponse(sessionId, content, assistantView) {
-        const response = await fetch(`/api/sessions/${sessionId}/messages/stream`, {
+        const streamPath = `/api/sessions/${sessionId}/messages/stream`;
+        const response = await fetch(streamPath, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content }),
         });
         if (!response.ok) {
-          throw new Error(await response.text());
+          throw await readableApiError(response, streamPath);
         }
         const writer = createTypewriter(assistantView.content);
         let turnFailed = false;
