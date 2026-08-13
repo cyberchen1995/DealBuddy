@@ -136,7 +136,7 @@
   <section class="section wrap reveal" id="report">
     <div class="section-head">
       <h2>报告</h2>
-      <p class="section-note">工作台在商品入库时自动生成报告。报告包含五个章节：最符合需求、最低预算、综合性价比、值得加预算、不推荐项。在追问区有过对话后，报告末尾追加「追问记录」章节。</p>
+      <p class="section-note">工作台在商品入库时自动生成报告。报告包含五个章节：最符合需求、最低预算、综合性价比、值得加预算、不推荐项。有过追问对话后，重新生成报告会在末尾并入「追问记录」章节。</p>
     </div>
 
     <figure class="report-fig" style="margin:0">
@@ -259,7 +259,7 @@ uv run dealbuddy web --port 8765</code></pre>
         <li>不需要注册或登录</li>
         <li>会话文件保存在 <code>~/.dealbuddy/sessions</code>，配置保存在 <code>~/.dealbuddy/config.json</code></li>
         <li>详情图在浏览器扩展的隐藏 iframe 中做 OCR，图片本身不经过工作台传输</li>
-        <li>追问是唯一涉及外部请求的功能，由你配置的 LLM Provider 决定数据去向</li>
+        <li>外部请求只在配置并启用 LLM 后发生（追问、商品短评、报告再生成），数据去向由你配置的 Provider 决定</li>
         <li>API Key 写入 <code>config.json</code> 后不出现在接口响应或日志中，界面用掩码显示</li>
         <li>扩展不读取购物平台的 Cookie</li>
         <li>MCP 请求校验 <code>Origin</code>，拒绝非 localhost 来源</li>
