@@ -184,7 +184,10 @@ def test_web_can_delete_session_offer_and_rebuild_report(
         ),
     )
 
-    deleted = client.delete(f"/api/sessions/{session_id}/offers/0")
+    deleted = client.delete(
+        f"/api/sessions/{session_id}/offers",
+        params={"url": "https://detail.tmall.com/item.htm?id=web-1"},
+    )
 
     assert deleted.status_code == 200
     assert deleted.json()["verified_count"] == 1
@@ -193,6 +196,54 @@ def test_web_can_delete_session_offer_and_rebuild_report(
     assert [offer["title"] for offer in session["verified_offers"]] == ["TCL Q10"]
     assert "TCL Q10" in session["report_markdown"]
     assert "海信 65E7N Pro" not in session["report_markdown"]
+
+    missing = client.delete(
+        f"/api/sessions/{session_id}/offers",
+        params={"url": "https://item.example.com/gone.html"},
+    )
+    assert missing.status_code == 404
+
+
+def test_web_delete_offer_by_url_survives_recapture_reorder(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    """确认弹窗等待期间重采集会重排列表(remove+append):
+    按 URL 删除必须命中点名的商品,不受下标漂移影响。"""
+    monkeypatch.setenv("DEALBUDDY_HOME", str(tmp_path))
+    client = TestClient(create_app())
+    session_id = client.post(
+        "/api/sessions",
+        json={"category": "电视", "request": "预算5000"},
+    ).json()["session"]["session_id"]
+    url_a = "https://item.example.com/web-a.html"
+    client.post(
+        "/api/current/offers",
+        json=sample_payload(url=url_a, title="商品 A"),
+    )
+    client.post(
+        "/api/current/offers",
+        json=sample_payload(url="https://item.jd.com/web-b.html", title="商品 B"),
+    )
+    # 模拟确认期间重采集 A:列表由 [A, B] 变 [B, A]
+    client.post(
+        "/api/current/offers",
+        json=sample_payload(url=url_a, title="商品 A"),
+    )
+
+    deleted = client.delete(
+        f"/api/sessions/{session_id}/offers",
+        params={"url": url_a},
+    )
+
+    assert deleted.status_code == 200
+    remaining = [
+        offer["title"]
+        for offer in client.get(f"/api/sessions/{session_id}").json()["session"][
+            "verified_offers"
+        ]
+    ]
+    assert remaining == ["商品 B"]
 
 
 def test_web_chat_suggestions_endpoint(tmp_path, monkeypatch) -> None:
