@@ -26,10 +26,10 @@
 | `--db-line` | `#ece3d6` | `rgba(228,208,180,0.14)` | 弱分隔线 |
 | `--db-line-strong` | `#ddd1bf` | `rgba(228,208,180,0.28)` | 强分隔线 |
 | `--db-text` | `#40382e` | `#ede5d8` | 正文 |
-| `--db-muted` | `#8f8577` | `#a99c8a` | 弱化文字 |
+| `--db-muted` | `#7a7060` | `#a99c8a` | 弱化文字 |
 | `--db-muted-strong` | `#6b6154` | `#c6b8a4` | 次强调文字 |
 | `--db-accent` | `#d97757` | `#e08b6d` | 主色(陶土暖橘):主按钮、选中态 |
-| `--db-accent-strong` | `#c2603f` | `#ea9c81` | 主色 hover/强调 |
+| `--db-accent-strong` | `#a84f2e` | `#ea9c81` | 主色 hover/强调 |
 | `--db-accent-soft` | `#f9e9e1` | `rgba(224,139,109,0.18)` | 主色淡底:选中底、光环 |
 | `--db-on-accent` | `#fffdf9` | `#241a12` | 主色底上的文字 |
 | `--db-link` | `#ad5230` | `#eb9a7c` | 链接 |
@@ -61,6 +61,8 @@
   用途为软底容器内 12px 辅助字,2026-08-14 用户复审接受。
 - 亮色 `--db-accent-strong` 已由 `#c2603f` 加深为 `#a84f2e`
   (白卡 5.49 / 选中底 4.65),A1 审计新发现项,已修。
+- 选中会话项(`accent-soft` 底)上的元数据文字改用 `--db-muted-strong`
+  (5.13;`--db-muted` 在该底上仅 4.12,review 补充发现)。
 
 ## 圆角
 
