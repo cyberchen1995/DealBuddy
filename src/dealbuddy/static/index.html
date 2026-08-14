@@ -2623,6 +2623,9 @@
           setMessage("请先选择或创建会话", true);
           return;
         }
+        // 会话 ID 与商品 URL 一并快照:等待确认期间在途的切会话/刷新可能替换
+        // state.currentSessionId,删除必须落在打开对话框时的那个会话上
+        const sessionId = state.currentSessionId;
         const offer = state.currentSession?.verified_offers?.[index];
         if (!offer) {
           return;
@@ -2640,7 +2643,7 @@
         // 按商品 URL 删除,身份→位置的解析在服务端写锁内完成:
         // 等待确认期间的重采集重排不再可能误删其它商品
         await api(
-          `/api/sessions/${state.currentSessionId}/offers?url=${encodeURIComponent(offerUrl)}`,
+          `/api/sessions/${sessionId}/offers?url=${encodeURIComponent(offerUrl)}`,
           { method: "DELETE" },
         );
         await refreshSessions();
