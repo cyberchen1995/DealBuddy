@@ -2,6 +2,14 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 与语义化版本。
 
+## [0.9.1] - 2026-08-14
+
+### Added
+
+- 追问支持 **Cmd/Ctrl+Enter 快捷发送**,输入框上方按平台显示提示角标
+  (macOS 显示「⌘ Enter 发送」,其余显示「Ctrl+Enter 发送」);
+  追问区禁用或生成中时快捷键不触发。
+
 ## [0.9.0] - 2026-08-13
 
 ### Changed

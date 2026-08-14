@@ -1102,6 +1102,23 @@
         }
       }
 
+      .label-row {
+        align-items: baseline;
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+      }
+
+      .key-hint {
+        background: var(--db-surface-soft);
+        border-radius: 999px;
+        color: var(--db-muted);
+        font-family: var(--db-font-mono);
+        font-size: 10.5px;
+        padding: 1px 8px;
+        white-space: nowrap;
+      }
+
       .chat-form {
         display: grid;
         gap: 12px;
@@ -1602,7 +1619,10 @@
                 </button>
               </div>
               <div class="field">
-                <label for="chat-input">追问当前会话</label>
+                <div class="label-row">
+                  <label for="chat-input">追问当前会话</label>
+                  <span class="key-hint" id="chat-key-hint" aria-hidden="true"></span>
+                </div>
                 <textarea
                   id="chat-input"
                   placeholder="例如：这几款里哪一款更适合电影和游戏？"
@@ -2801,6 +2821,22 @@
           await refreshChatSuggestions(sessionId);
         }
       }
+
+      // 追问快捷提交:Cmd/Ctrl+Enter(提示角标按平台显示)
+      const isApplePlatform = /Mac|iPhone|iPad/.test(navigator.platform);
+      $("chat-key-hint").textContent = isApplePlatform
+        ? "⌘ Enter 发送"
+        : "Ctrl+Enter 发送";
+      $("chat-input").addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" || !(event.metaKey || event.ctrlKey)) {
+          return;
+        }
+        event.preventDefault();
+        if ($("chat-submit").disabled || $("chat-input").disabled) {
+          return;
+        }
+        $("chat-form").requestSubmit();
+      });
 
       $("chat-form").addEventListener("submit", (event) => {
         event.preventDefault();
