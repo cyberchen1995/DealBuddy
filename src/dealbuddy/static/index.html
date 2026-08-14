@@ -21,10 +21,10 @@
         --db-line: #ece3d6;
         --db-line-strong: #ddd1bf;
         --db-text: #40382e;
-        --db-muted: #8f8577;
+        --db-muted: #7a7060;
         --db-muted-strong: #6b6154;
         --db-accent: #d97757;
-        --db-accent-strong: #c2603f;
+        --db-accent-strong: #a84f2e;
         --db-accent-soft: #f9e9e1;
         --db-on-accent: #fffdf9;
         --db-link: #ad5230;
@@ -664,6 +664,11 @@
 
       .session-item.active strong {
         color: var(--db-accent-strong);
+      }
+
+      /* 选中底(accent-soft)偏浅:元数据用次强色保证 4.5+(muted 只有 4.12) */
+      .session-item.active .session-meta {
+        color: var(--db-muted-strong);
       }
 
       .session-item strong {
@@ -1578,7 +1583,7 @@
             本地采集商品、整理规格、生成报告，并在需要时接入你选择的 LLM。
           </p>
         </div>
-        <div class="status-row" aria-label="服务状态">
+        <div class="status-row" aria-label="服务状态" aria-live="polite">
           <div class="theme-switch" role="group" aria-label="界面主题">
             <button type="button" data-theme-choice="auto" aria-pressed="true">
               自动
@@ -2154,6 +2159,15 @@
         showToast(message, { level: isError ? "error" : "info" });
       }
 
+      // 状态 chip 在 aria-live 区域内:同值不重写,避免一次操作里
+      // 多处渲染路径触发读屏重复播报
+      function setStatusChip(id, value) {
+        const chip = $(id);
+        if (chip.textContent !== value) {
+          chip.textContent = value;
+        }
+      }
+
       function formatPrice(value) {
         return value ? `¥${text(value)}` : "未提取";
       }
@@ -2318,7 +2332,7 @@
       }
 
       function renderSessions() {
-        $("current-status").textContent = `当前会话：${state.currentSessionId || "未选择"}`;
+        setStatusChip("current-status", `当前会话：${state.currentSessionId || "未选择"}`);
         $("session-list").innerHTML = "";
         if (state.sessions.length === 0) {
           $("session-list").innerHTML = `
@@ -2676,7 +2690,7 @@
 
       async function refreshSessions() {
         const health = await api("/api/health");
-        $("service-status").textContent = health.status === "ok" ? "服务正常" : "服务异常";
+        setStatusChip("service-status", health.status === "ok" ? "服务正常" : "服务异常");
         const payload = await api("/api/sessions");
         state.sessions = payload.sessions || [];
         state.currentSessionId = payload.current_session_id || null;
@@ -2743,7 +2757,7 @@
           : status.enabled
             ? "待补全配置"
             : "未启用";
-        $("llm-status").textContent = status.configured ? "LLM：已配置" : `LLM：${summary}`;
+        setStatusChip("llm-status", status.configured ? "LLM：已配置" : `LLM：${summary}`);
         $("llm-settings-summary").textContent = summary;
         $("llm-settings-summary").title = summary;
         $("privacy-notice").textContent = status.configured
