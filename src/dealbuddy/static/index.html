@@ -1246,7 +1246,8 @@
         display: flex;
         flex-direction: column;
         gap: 12px;
-        max-height: calc(100dvh - 170px);
+        /* 94px = workspace 上下留白 + 面板头;header 实高由 JS 观察写入变量 */
+        max-height: calc(100dvh - var(--header-height, 76px) - 94px);
         min-height: 0;
         overflow-x: hidden;
         overflow-y: auto;
@@ -3050,6 +3051,18 @@
           liveSyncCurrentSession(true);
         }
       });
+
+      // header 实高写入 CSS 变量:商品列表 max-height 随 header 换行/断点自适应,
+      // 不再依赖 170px 硬编码假设
+      const appHeader = document.querySelector(".app-header");
+      const syncHeaderHeight = () => {
+        document.documentElement.style.setProperty(
+          "--header-height",
+          `${appHeader.offsetHeight}px`,
+        );
+      };
+      new ResizeObserver(syncHeaderHeight).observe(appHeader);
+      syncHeaderHeight();
 
       refreshSessions().catch((error) => {
         // 首屏加载失败:清掉骨架占位渲染空态,错误经 toast 提示
