@@ -820,6 +820,57 @@
         grid-column: 1 / -1;
       }
 
+      /* ---------- 骨架屏(首屏加载占位;reduced-motion 下动画只跑一次即静止) ---------- */
+      .skeleton {
+        background: var(--db-surface-soft);
+        border-radius: 10px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .skeleton::after {
+        animation: skeleton-sweep 1.4s ease-in-out infinite;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          color-mix(in srgb, var(--db-surface-raised) 70%, transparent),
+          transparent
+        );
+        content: "";
+        inset: 0;
+        position: absolute;
+      }
+
+      @keyframes skeleton-sweep {
+        from {
+          transform: translateX(-100%);
+        }
+
+        to {
+          transform: translateX(100%);
+        }
+      }
+
+      .skeleton-row {
+        height: 56px;
+      }
+
+      .skeleton-line {
+        height: 14px;
+        margin-bottom: 12px;
+      }
+
+      .skeleton-card {
+        height: 96px;
+        border-radius: 16px;
+      }
+
+      /* 报告再生成期间的区域呼吸(旧内容保持可读) */
+      .report.is-busy {
+        opacity: 0.55;
+        transition: opacity 300ms ease;
+      }
+
       /* ---------- 全局 toast(z-index 层级见 tokens.md:toast=200) ---------- */
       .toast-stack {
         display: grid;
@@ -1584,7 +1635,11 @@
               <button type="submit">新建会话</button>
             </div>
           </form>
-          <div class="session-list" id="session-list" aria-live="polite"></div>
+          <div class="session-list" id="session-list" aria-live="polite">
+            <div class="skeleton skeleton-row" aria-hidden="true"></div>
+            <div class="skeleton skeleton-row" aria-hidden="true"></div>
+            <div class="skeleton skeleton-row" aria-hidden="true"></div>
+          </div>
 
         </div>
       </section>
@@ -1600,7 +1655,12 @@
           </button>
         </div>
         <div class="panel-body analysis-stack">
-          <div class="report markdown-content" id="report-view">暂无报告</div>
+          <div class="report markdown-content" id="report-view">
+            <div class="skeleton skeleton-line" style="width: 42%" aria-hidden="true"></div>
+            <div class="skeleton skeleton-line" style="width: 96%" aria-hidden="true"></div>
+            <div class="skeleton skeleton-line" style="width: 88%" aria-hidden="true"></div>
+            <div class="skeleton skeleton-line" style="width: 64%" aria-hidden="true"></div>
+          </div>
           <div class="conversation">
             <div class="messages" id="messages" aria-live="polite"></div>
             <div
@@ -1645,7 +1705,10 @@
           <span class="status-chip" id="offer-count">0 个商品</span>
         </div>
         <div class="panel-body">
-          <div class="offer-list" id="offer-list" aria-live="polite"></div>
+          <div class="offer-list" id="offer-list" aria-live="polite">
+            <div class="skeleton skeleton-card" aria-hidden="true"></div>
+            <div class="skeleton skeleton-card" aria-hidden="true"></div>
+          </div>
         </div>
       </section>
     </main>
@@ -1961,7 +2024,7 @@
             <div class="empty-state compact">
               <div>
                 <div class="empty-title">暂无报告</div>
-                <div>采集商品后会自动生成本地分析报告。</div>
+                <div>采集商品后自动生成。</div>
               </div>
             </div>
           `;
@@ -2330,6 +2393,8 @@
         const button = $("regenerate-report-button");
         button.disabled = !state.currentSessionId || state.reportRegenerating;
         button.textContent = state.reportRegenerating ? "生成中" : "重新生成";
+        button.classList.toggle("busy", state.reportRegenerating);
+        $("report-view").classList.toggle("is-busy", state.reportRegenerating);
       }
 
       async function regenerateReport() {
@@ -2532,7 +2597,7 @@
             <div class="empty-state">
               <div>
                 <div class="empty-title">等待商品投递</div>
-                <div>选择当前会话后，在商品详情页使用扩展采集价格、SKU 和规格。</div>
+                <div>在商品详情页使用扩展采集价格、SKU 和规格。</div>
               </div>
             </div>
           `;
@@ -2847,6 +2912,7 @@
         const result = $("llm-test-result");
         const button = $("llm-test-button");
         button.disabled = true;
+        button.classList.add("busy");
         result.className = "notice";
         result.textContent = "正在测试连接…";
         try {
@@ -2868,6 +2934,7 @@
           result.textContent = String(error.message || error);
         } finally {
           button.disabled = false;
+          button.classList.remove("busy");
         }
       });
 
@@ -2984,7 +3051,12 @@
         }
       });
 
-      refreshSessions().catch((error) => setMessage(String(error), true));
+      refreshSessions().catch((error) => {
+        // 首屏加载失败:清掉骨架占位渲染空态,错误经 toast 提示
+        renderSessions();
+        renderSessionDetail();
+        setMessage(String(error), true);
+      });
     </script>
   </body>
 </html>
