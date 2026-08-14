@@ -2637,19 +2637,10 @@
         if (!confirmed) {
           return;
         }
-        // 等待确认期间列表可能因重采集重排:按 URL 在最新会话数据里重解析下标,
-        // 确保删除的是对话框里点名的那个商品
-        const offers = state.currentSession?.verified_offers || [];
-        const currentIndex = offers.findIndex(
-          (item) => text(item.url) === offerUrl,
-        );
-        if (currentIndex === -1) {
-          setMessage("该商品已不在当前会话中", true);
-          await refreshSessions();
-          return;
-        }
+        // 按商品 URL 删除,身份→位置的解析在服务端写锁内完成:
+        // 等待确认期间的重采集重排不再可能误删其它商品
         await api(
-          `/api/sessions/${state.currentSessionId}/offers/${currentIndex}`,
+          `/api/sessions/${state.currentSessionId}/offers?url=${encodeURIComponent(offerUrl)}`,
           { method: "DELETE" },
         );
         await refreshSessions();

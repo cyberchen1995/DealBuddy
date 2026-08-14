@@ -1069,15 +1069,25 @@ def create_app(
             "report_available": bool(session.report_markdown),
         }
 
-    @app.delete("/api/sessions/{session_id}/offers/{offer_index}")
-    def delete_session_offer(session_id: str, offer_index: int) -> dict[str, object]:
+    # 按稳定身份(商品 URL)删除,身份→位置的解析放在写锁内:
+    # 确认弹窗等待期间的重采集会重排列表,任何客户端下标都可能过期
+    @app.delete("/api/sessions/{session_id}/offers")
+    def delete_session_offer(session_id: str, url: str) -> dict[str, object]:
         with _WRITE_LOCK:
             try:
                 session = resolved_store.load(session_id)
             except FileNotFoundError as exc:
                 raise HTTPException(404, str(exc)) from exc
-            if offer_index < 0 or offer_index >= len(session.verified_offers):
-                raise HTTPException(404, f"Unknown offer index: {offer_index}")
+            offer_index = next(
+                (
+                    index
+                    for index, offer in enumerate(session.verified_offers)
+                    if str(offer.get("url") or "") == url
+                ),
+                -1,
+            )
+            if offer_index == -1:
+                raise HTTPException(404, "该商品已不在当前会话中")
             removed_offer = session.verified_offers.pop(offer_index)
             rebuild_session_report(session)
             resolved_store.save(session)
